@@ -1,0 +1,9 @@
+# Follow-ups to the first tiny sweep: fairness fixes and ablations.
+variants:
+  # post-norm is unstable at the shared lr=3e-3; give it its own (lower) lr + longer warmup
+  - {name: postnorm-lr1e-3, connection: postnorm, overrides: {lr: 1.0e-3, warmup_steps: 300}}
+  # mHC's init is unpublished; near-identity stream mixing instead of uniform
+  - {name: mhc-n4-idinit,   connection: mhc,        kwargs: {n: 4, res_bias_diag: 3.0}}
+  # where does MUDDFormer's gain come from?
+  - {name: muddformer-static, connection: muddformer, kwargs: {dynamic: false}}
+  - {name: muddformer-r-only, connection: muddformer, kwargs: {qkv: false}}

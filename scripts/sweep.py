@@ -81,7 +81,7 @@ def main():
             v, g = todo.pop(0), free.pop(0)
             cmd = cmd_for(v, args, extra)
             print("[run] " + " ".join(cmd), flush=True)
-            env = dict(os.environ)
+            env = dict(os.environ, PYTHONUNBUFFERED="1")
             if g is not None:
                 env["CUDA_VISIBLE_DEVICES"] = g
             log = open(os.path.join(out_dir, f"{v['_run']}.stdout"), "w")

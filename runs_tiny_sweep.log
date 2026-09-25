@@ -1,0 +1,19 @@
+[run] /Library/Developer/CommandLineTools/usr/bin/python3 -m hcfactory.train --config configs/tiny.yaml connection=prenorm run_name=prenorm_s0
+[done] prenorm_s0 rc=0
+[run] /Library/Developer/CommandLineTools/usr/bin/python3 -m hcfactory.train --config configs/tiny.yaml connection=postnorm run_name=postnorm_s0
+[done] postnorm_s0 rc=0
+[run] /Library/Developer/CommandLineTools/usr/bin/python3 -m hcfactory.train --config configs/tiny.yaml connection=hc run_name=hc-static-n4_s0 connection_kwargs.n=4 connection_kwargs.dynamic=false
+[done] hc-static-n4_s0 rc=0
+[run] /Library/Developer/CommandLineTools/usr/bin/python3 -m hcfactory.train --config configs/tiny.yaml connection=hc run_name=hc-dynamic-n4_s0 connection_kwargs.n=4 connection_kwargs.dynamic=true
+[done] hc-dynamic-n4_s0 rc=0
+[run] /Library/Developer/CommandLineTools/usr/bin/python3 -m hcfactory.train --config configs/tiny.yaml connection=mhc run_name=mhc-n4_s0 connection_kwargs.n=4
+[done] mhc-n4_s0 rc=0
+[run] /Library/Developer/CommandLineTools/usr/bin/python3 -m hcfactory.train --config configs/tiny.yaml connection=frac run_name=frac-dynamic-m2_s0 connection_kwargs.m=2 connection_kwargs.dynamic=true
+[done] frac-dynamic-m2_s0 rc=0
+[run] /Library/Developer/CommandLineTools/usr/bin/python3 -m hcfactory.train --config configs/tiny.yaml connection=denseformer run_name=denseformer_s0
+[done] denseformer_s0 rc=0
+[run] /Library/Developer/CommandLineTools/usr/bin/python3 -m hcfactory.train --config configs/tiny.yaml connection=muddformer run_name=muddformer_s0
+[done] muddformer_s0 rc=0
+[run] /Library/Developer/CommandLineTools/usr/bin/python3 -m hcfactory.train --config configs/tiny.yaml connection=laurel run_name=laurel-rw-lr_s0 connection_kwargs.variant="rw_lr"
+[done] laurel-rw-lr_s0 rc=0
+[run] /Library/Developer/CommandLineTools/usr/bin/python3 -m hcfactory.train --config configs/tiny.yaml connection=attnres run_name=attnres-full_s0
