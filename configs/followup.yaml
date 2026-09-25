@@ -1,4 +1,0 @@
-# Follow-ups after the first tiny sweep: fair post-norm LR, seed variance, mHC stream-preserving init.
-variants:
-  - {name: postnorm-lr1e-3, connection: postnorm, overrides: {lr: 1.0e-3, warmup_steps: 300}}
-  - {name: mhc-n4-resdiag2, connection: mhc, kwargs: {n: 4, res_bias_diag: 2.0}}
