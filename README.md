@@ -13,15 +13,15 @@ to the wiring and nothing else.
 |---|---|---|---|---|---|
 | `prenorm` | Pre-Norm residual | Xiong et al. 2020 | `h ← h + f(norm(h))` | 0 | — |
 | `postnorm` | Post-Norm residual | Vaswani et al. 2017 | `h ← norm(h + f(h))` | 2L·d | ✗ |
-| `hc` | Hyper-Connections (static / dynamic) | [Zhu et al., ICLR'25](https://arxiv.org/abs/2409.19606) | n parallel residual streams; learned read (A_m), write (B) and stream mixing (A_r) | n(n+2) (+ d(n+2) dyn.) per sublayer | ✓ |
-| `mhc` | Manifold-Constrained HC | [DeepSeek, 2025](https://arxiv.org/abs/2512.24880) | HC with σ-gated read/write and a **doubly-stochastic** (Sinkhorn) stream-mixing matrix; learned read-out head | nd·n(n+2) per sublayer | ✗ |
-| `frac` | Frac-Connections | [Zhu et al., 2025](https://arxiv.org/abs/2503.14125) | HC without widening: split d into m fractions | ≈ 2m² (+ d/m·3m dyn.) per sublayer | ✓ |
+| `hc` | Hyper-Connections (static / dynamic) | [Zhu et al., ICLR'25](https://arxiv.org/abs/2409.19606) | n parallel residual streams; learned read (A_m), write (B) and stream mixing (A_r) | n(n+2); dynamic adds d(n+2) + 2d (LayerNorm) + 2 | ✓ |
+| `mhc` | Manifold-Constrained HC | [Xie et al. (DeepSeek), ICML'26](https://arxiv.org/abs/2512.24880) | HC with σ-gated read/write and a **doubly-stochastic** (Sinkhorn) stream-mixing matrix; learned read-out head | nd·n(n+2) + n(n+2) + 3 per sublayer, plus an n·nd read-out head | ✗ |
+| `frac` | Frac-Connections | [Zhu et al., 2025](https://arxiv.org/abs/2503.14125) | HC without widening: split d into m fractions | 2m² + m; dynamic adds (d/m)(2m+3) + 2 | ✓ |
 | `denseformer` | DenseFormer (DWA) | [Pagliardini et al., NeurIPS'24](https://arxiv.org/abs/2402.02622) | after each block, a learned static weighted average of all previous block outputs | O(L²) scalars | ✓ |
 | `muddformer` | MUDDFormer | [Xiao et al., ICML'25](https://arxiv.org/abs/2502.12170) | **dynamic, per-token** dense weights, separately for Q, K, V and residual streams | small MLP per block | ✓ |
 | `laurel` | LAuReL (RW / LR / RW+LR) | [Menghani et al., ICML'25](https://arxiv.org/abs/2411.07501) | learned residual weights and a low-rank skip path `x + xAB` | 2 + 2dr per sublayer | ✓ |
-| `attnres` | Attention Residuals (Full / Block) | [Kimi Team, 2026](https://arxiv.org/abs/2603.15031) | **replace** the residual sum with softmax attention over previous sublayer outputs (depth attention) | d per sublayer | ✗ (uniform avg) |
-| `mhar` | Multi-Head Attention Residuals | [Luo et al., 2026](https://arxiv.org/abs/2607.27230) | AttnRes with H independent depth softmaxes (one per channel group) | d per sublayer | ✗ |
-| `dar` | Delta Attention Residuals (per-sublayer / Block) | Luo et al., 2026 | keep the residual stream; **add** depth-routed deltas; optional zero-init gate | d per sublayer | ✓ with `gate: zero` |
+| `attnres` | Attention Residuals (Full / Block) | [Kimi Team, 2026](https://arxiv.org/abs/2603.15031) | **replace** the residual sum with softmax attention over previous sublayer outputs (depth attention) | 2d per sublayer (query + key-norm weight), plus one final router | ✗ (uniform avg) |
+| `mhar` | Multi-Head Attention Residuals | [Luo et al., 2026](https://arxiv.org/abs/2607.27230) | AttnRes with H independent depth softmaxes (one per channel group) | 2d per sublayer, plus one final router | ✗ |
+| `dar` | Delta Attention Residuals (per-sublayer / Block) | Luo et al., 2026 | keep the residual stream; **add** depth-routed deltas; optional zero-init gate | 2d per sublayer (+1 gate) | ✓ with `gate: zero` |
 
 "= pre-norm at init" means that with the paper's initialisation the variant computes exactly the
 same function as the pre-norm baseline. This is checked by
@@ -30,8 +30,8 @@ same function as the pre-norm baseline. This is checked by
 ## Results
 
 > Status: **laptop-scale smoke comparison only** (12 layers, d=256, 9.6M non-embedding params,
-> 12.3M FineWeb-Edu tokens, 1 seed, Apple M3 Pro). Differences smaller than about 0.01 are
-> within seed noise at this scale. GPU-scale runs (`configs/gpt124m.yaml`, `configs/gpt350m.yaml`)
+> 12.3M FineWeb-Edu tokens, 1 seed, Apple M3 Pro). Seed-to-seed noise has not been measured
+> yet, so treat small differences as unresolved. GPU-scale runs (`configs/gpt124m.yaml`, `configs/gpt350m.yaml`)
 > are the next step; see [Reproducing](#reproducing).
 
 See [`results/tiny/`](results/tiny) for the table, loss curves and the quality-vs-throughput plot.
@@ -41,7 +41,7 @@ See [`results/tiny/`](results/tiny) for the table, loss curves and the quality-v
 ## Quickstart
 
 ```bash
-pip install -e .                      # torch >= 2.4, numpy, pyyaml, tiktoken, matplotlib
+pip install -e .                      # pip >= 21.3; torch >= 2.4, numpy, pyyaml, tiktoken, matplotlib
 pytest tests/                         # every variant: shapes, grads, causality, init-equivalence
 
 # data: GPT-2 BPE tokens in flat uint16 shards
