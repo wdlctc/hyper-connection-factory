@@ -1,0 +1,16 @@
+# The standard comparison set. `name` is the label used in tables/plots.
+variants:
+  - {name: prenorm,        connection: prenorm}
+  - {name: postnorm,       connection: postnorm}
+  - {name: hc-static-n4,   connection: hc,          kwargs: {n: 4, dynamic: false}}
+  - {name: hc-dynamic-n4,  connection: hc,          kwargs: {n: 4, dynamic: true}}
+  - {name: mhc-n4,         connection: mhc,         kwargs: {n: 4}}
+  - {name: frac-dynamic-m2, connection: frac,       kwargs: {m: 2, dynamic: true}}
+  - {name: denseformer,    connection: denseformer}
+  - {name: muddformer,     connection: muddformer}
+  - {name: laurel-rw-lr,   connection: laurel,      kwargs: {variant: rw_lr}}
+  - {name: attnres-full,   connection: attnres}
+  - {name: attnres-block,  connection: attnres,     kwargs: {block_size: 4}}
+  - {name: mhar-h4,        connection: mhar,        kwargs: {heads: 4}}
+  - {name: dar,            connection: dar}
+  - {name: dar-block,      connection: dar,         kwargs: {block: true}}

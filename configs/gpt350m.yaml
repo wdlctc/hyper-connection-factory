@@ -1,0 +1,17 @@
+# ~350M scale, 24 layers (deeper nets are where cross-layer connections should matter most).
+n_layer: 24
+n_head: 16
+d_model: 1024
+data_dir: data/fineweb-edu
+seq_len: 1024
+batch_size: 16
+grad_accum: 4
+max_steps: 15000
+lr: 1.0e-3
+warmup_steps: 750
+schedule: wsd
+cooldown_frac: 0.2
+eval_every: 1000
+eval_batches: 50
+compile: true
+out_dir: runs/gpt350m

@@ -1,0 +1,15 @@
+# Laptop-scale smoke comparison (Apple M-series / any single GPU).
+# ~9.6M non-embedding params, 12 layers so depth routing has something to route over.
+# 2000 steps x 24 x 256 = 12.3M tokens; ~20-30 min per variant on an M3 Pro (MPS, fp32).
+n_layer: 12
+n_head: 4
+d_model: 256
+data_dir: data/fineweb-edu
+seq_len: 256
+batch_size: 24
+max_steps: 2000
+lr: 3.0e-3
+warmup_steps: 100
+eval_every: 250
+eval_batches: 40
+out_dir: runs/tiny

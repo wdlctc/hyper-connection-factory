@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hcfactory"
+version = "0.1.0"
+description = "Unified implementations and comparisons of hyper-connection / residual-connection variants for LLMs"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.9"
+dependencies = ["torch>=2.4", "numpy", "pyyaml", "tiktoken", "matplotlib"]
+
+[project.optional-dependencies]
+data = ["datasets"]
+dev = ["pytest"]
+wandb = ["wandb"]
+
+[tool.setuptools.packages.find]
+include = ["hcfactory*"]
