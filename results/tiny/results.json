@@ -1,17 +1,17 @@
 [
   {
     "name": "muddformer",
-    "seeds": 1,
-    "val_loss": 5.089594841003418,
-    "val_std": 0.0,
+    "seeds": 3,
+    "val_loss": 5.124008019765218,
+    "val_std": 0.0333238548235198,
     "params": 9863809,
     "conn_params": 217473,
-    "tok_per_s": 5481.938626136707,
+    "tok_per_s": 5510.355260701843,
     "mem": null,
     "diverged": false,
     "tokens": 12288000,
-    "delta": -0.23555946350097656,
-    "rel_speed": 0.5152814933199854
+    "delta": -0.1964143117268886,
+    "rel_speed": 0.5666791351480105
   },
   {
     "name": "muddformer-static",
@@ -24,8 +24,8 @@
     "mem": null,
     "diverged": false,
     "tokens": 12288000,
-    "delta": -0.08648300170898438,
-    "rel_speed": 0.6304120671372231
+    "delta": -0.08175102869669626,
+    "rel_speed": 0.6897183252716265
   },
   {
     "name": "muddformer-r-only",
@@ -38,8 +38,8 @@
     "mem": null,
     "diverged": false,
     "tokens": 12288000,
-    "delta": -0.08043861389160156,
-    "rel_speed": 0.7843392393290193
+    "delta": -0.07570664087931345,
+    "rel_speed": 0.8581262555005594
   },
   {
     "name": "mhar-h4",
@@ -52,8 +52,8 @@
     "mem": null,
     "diverged": false,
     "tokens": 12288000,
-    "delta": -0.0677943229675293,
-    "rel_speed": 0.5715119566828861
+    "delta": -0.06306234995524118,
+    "rel_speed": 0.6252771642301511
   },
   {
     "name": "hc-static-n4",
@@ -66,8 +66,8 @@
     "mem": null,
     "diverged": false,
     "tokens": 12288000,
-    "delta": -0.05175971984863281,
-    "rel_speed": 0.7365216679161538
+    "delta": -0.0470277468363447,
+    "rel_speed": 0.8058102276313484
   },
   {
     "name": "frac-dynamic-m2",
@@ -80,8 +80,8 @@
     "mem": null,
     "diverged": false,
     "tokens": 12288000,
-    "delta": -0.041602134704589844,
-    "rel_speed": 0.8596168528125316
+    "delta": -0.03687016169230173,
+    "rel_speed": 0.9404856394794695
   },
   {
     "name": "attnres-full",
@@ -94,8 +94,8 @@
     "mem": null,
     "diverged": false,
     "tokens": 12288000,
-    "delta": -0.03335380554199219,
-    "rel_speed": 0.5173279008238809
+    "delta": -0.028621832529704072,
+    "rel_speed": 0.5659957224373141
   },
   {
     "name": "denseformer",
@@ -108,8 +108,8 @@
     "mem": null,
     "diverged": false,
     "tokens": 12288000,
-    "delta": -0.0322270393371582,
-    "rel_speed": 0.7120452719438104
+    "delta": -0.027495066324870088,
+    "rel_speed": 0.7790312052763476
   },
   {
     "name": "dar-block",
@@ -122,8 +122,8 @@
     "mem": null,
     "diverged": false,
     "tokens": 12288000,
-    "delta": -0.025678634643554688,
-    "rel_speed": 0.7466812401085317
+    "delta": -0.020946661631266572,
+    "rel_speed": 0.8169255654925408
   },
   {
     "name": "hc-dynamic-n4",
@@ -136,8 +136,8 @@
     "mem": null,
     "diverged": false,
     "tokens": 12288000,
-    "delta": -0.025005817413330078,
-    "rel_speed": 0.6265491337422854
+    "delta": -0.020273844401041963,
+    "rel_speed": 0.6854919849290448
   },
   {
     "name": "laurel-rw-lr",
@@ -150,8 +150,8 @@
     "mem": null,
     "diverged": false,
     "tokens": 12288000,
-    "delta": -0.024538516998291016,
-    "rel_speed": 0.7515761169425436
+    "delta": -0.0198065439860029,
+    "rel_speed": 0.8222809297508692
   },
   {
     "name": "attnres-block",
@@ -164,17 +164,17 @@
     "mem": null,
     "diverged": false,
     "tokens": 12288000,
-    "delta": -0.020536422729492188,
-    "rel_speed": 0.7914746372167071
+    "delta": -0.015804449717204072,
+    "rel_speed": 0.8659329186940345
   },
   {
     "name": "prenorm",
-    "seeds": 1,
-    "val_loss": 5.3251543045043945,
-    "val_std": 0.0,
+    "seeds": 3,
+    "val_loss": 5.320422331492106,
+    "val_std": 0.005541711974856271,
     "params": 9640192,
     "conn_params": 0,
-    "tok_per_s": 10638.726011323039,
+    "tok_per_s": 9723.942384542881,
     "mem": null,
     "diverged": false,
     "tokens": 12288000,
@@ -192,8 +192,8 @@
     "mem": null,
     "diverged": false,
     "tokens": 12288000,
-    "delta": 0.015619277954101562,
-    "rel_speed": 0.602952485389206
+    "delta": 0.020351250966389678,
+    "rel_speed": 0.659675472789586
   },
   {
     "name": "mhc-n4-idinit",
@@ -206,8 +206,8 @@
     "mem": null,
     "diverged": false,
     "tokens": 12288000,
-    "delta": 0.02553272247314453,
-    "rel_speed": 0.5803580868705638
+    "delta": 0.030264695485432647,
+    "rel_speed": 0.634955497523939
   },
   {
     "name": "mhc-n4",
@@ -220,8 +220,22 @@
     "mem": null,
     "diverged": false,
     "tokens": 12288000,
-    "delta": 0.029961585998535156,
-    "rel_speed": 0.6051724919792062
+    "delta": 0.03469355901082327,
+    "rel_speed": 0.6621043273549819
+  },
+  {
+    "name": "postnorm-lr3e-4",
+    "seeds": 1,
+    "val_loss": 5.912773609161377,
+    "val_std": 0.0,
+    "params": 9640192,
+    "conn_params": 6144,
+    "tok_per_s": 8637.336224845543,
+    "mem": null,
+    "diverged": false,
+    "tokens": 12288000,
+    "delta": 0.5923512776692705,
+    "rel_speed": 0.8882545662318403
   },
   {
     "name": "postnorm-lr1e-3",
@@ -234,8 +248,8 @@
     "mem": null,
     "diverged": false,
     "tokens": 12288000,
-    "delta": 2.303492546081543,
-    "rel_speed": 0.9326871930821938
+    "delta": 2.308224519093831,
+    "rel_speed": 1.0204301001664016
   },
   {
     "name": "postnorm",
@@ -248,7 +262,7 @@
     "mem": null,
     "diverged": false,
     "tokens": 12288000,
-    "delta": 2.351668357849121,
-    "rel_speed": 0.9908420429159523
+    "delta": 2.356400330861409,
+    "rel_speed": 1.0840558899072439
   }
 ]
