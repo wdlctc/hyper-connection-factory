@@ -1,0 +1,15 @@
+# HC scaling ladder: width 256, depth fixed at 12 (24 sublayers), head_dim 64.
+# Same data / tokens (12.3M) / schedule at every width; Adam LR scaled ~1/width
+# from the tuned d=256 value (3e-3), capped at 3e-3.
+n_layer: 12
+n_head: 4
+d_model: 256
+data_dir: data/fineweb-edu
+seq_len: 256
+batch_size: 24
+max_steps: 2000
+lr: 0.003
+warmup_steps: 100
+eval_every: 250
+eval_batches: 40
+out_dir: runs/scaling/w256

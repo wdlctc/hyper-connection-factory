@@ -1,0 +1,7 @@
+# Hyper-connection family for the scaling study (names match configs/variants.yaml).
+variants:
+  - {name: prenorm,         connection: prenorm}
+  - {name: hc-static-n4,    connection: hc,   kwargs: {n: 4, dynamic: false}}
+  - {name: hc-dynamic-n4,   connection: hc,   kwargs: {n: 4, dynamic: true}}
+  - {name: mhc-n4,          connection: mhc,  kwargs: {n: 4}}
+  - {name: frac-dynamic-m2, connection: frac, kwargs: {m: 2, dynamic: true}}

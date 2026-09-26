@@ -1,0 +1,8 @@
+# Expansion-rate scan (run at w256; n=4 comes from the main ladder).
+variants:
+  - {name: hc-static-n2,  connection: hc, kwargs: {n: 2, dynamic: false}}
+  - {name: hc-static-n8,  connection: hc, kwargs: {n: 8, dynamic: false}}
+  - {name: hc-dynamic-n2, connection: hc, kwargs: {n: 2, dynamic: true}}
+  - {name: hc-dynamic-n8, connection: hc, kwargs: {n: 8, dynamic: true}}
+  - {name: mhc-n2,        connection: mhc, kwargs: {n: 2}}
+  - {name: frac-dynamic-m4, connection: frac, kwargs: {m: 4, dynamic: true}}
