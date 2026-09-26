@@ -14,6 +14,48 @@
     "rel_speed": 0.5152814933199854
   },
   {
+    "name": "muddformer-static",
+    "seeds": 1,
+    "val_loss": 5.23867130279541,
+    "val_std": 0.0,
+    "params": 9646657,
+    "conn_params": 321,
+    "tok_per_s": 6706.781256504702,
+    "mem": null,
+    "diverged": false,
+    "tokens": 12288000,
+    "delta": -0.08648300170898438,
+    "rel_speed": 0.6304120671372231
+  },
+  {
+    "name": "muddformer-r-only",
+    "seeds": 1,
+    "val_loss": 5.244715690612793,
+    "val_std": 0.0,
+    "params": 9842650,
+    "conn_params": 202458,
+    "tok_per_s": 8344.370267150964,
+    "mem": null,
+    "diverged": false,
+    "tokens": 12288000,
+    "delta": -0.08043861389160156,
+    "rel_speed": 0.7843392393290193
+  },
+  {
+    "name": "mhar-h4",
+    "seeds": 1,
+    "val_loss": 5.257359981536865,
+    "val_std": 0.0,
+    "params": 9652992,
+    "conn_params": 12800,
+    "tok_per_s": 6080.159119344346,
+    "mem": null,
+    "diverged": false,
+    "tokens": 12288000,
+    "delta": -0.0677943229675293,
+    "rel_speed": 0.5715119566828861
+  },
+  {
     "name": "hc-static-n4",
     "seeds": 1,
     "val_loss": 5.273394584655762,
@@ -42,6 +84,20 @@
     "rel_speed": 0.8596168528125316
   },
   {
+    "name": "attnres-full",
+    "seeds": 1,
+    "val_loss": 5.291800498962402,
+    "val_std": 0.0,
+    "params": 9652992,
+    "conn_params": 12800,
+    "tok_per_s": 5503.709794878167,
+    "mem": null,
+    "diverged": false,
+    "tokens": 12288000,
+    "delta": -0.03335380554199219,
+    "rel_speed": 0.5173279008238809
+  },
+  {
     "name": "denseformer",
     "seeds": 1,
     "val_loss": 5.292927265167236,
@@ -54,6 +110,20 @@
     "tokens": 12288000,
     "delta": -0.0322270393371582,
     "rel_speed": 0.7120452719438104
+  },
+  {
+    "name": "dar-block",
+    "seeds": 1,
+    "val_loss": 5.29947566986084,
+    "val_std": 0.0,
+    "params": 9652480,
+    "conn_params": 12288,
+    "tok_per_s": 7943.737131309579,
+    "mem": null,
+    "diverged": false,
+    "tokens": 12288000,
+    "delta": -0.025678634643554688,
+    "rel_speed": 0.7466812401085317
   },
   {
     "name": "hc-dynamic-n4",
@@ -84,6 +154,20 @@
     "rel_speed": 0.7515761169425436
   },
   {
+    "name": "attnres-block",
+    "seeds": 1,
+    "val_loss": 5.304617881774902,
+    "val_std": 0.0,
+    "params": 9652992,
+    "conn_params": 12800,
+    "tok_per_s": 8420.281810259847,
+    "mem": null,
+    "diverged": false,
+    "tokens": 12288000,
+    "delta": -0.020536422729492188,
+    "rel_speed": 0.7914746372167071
+  },
+  {
     "name": "prenorm",
     "seeds": 1,
     "val_loss": 5.3251543045043945,
@@ -98,6 +182,34 @@
     "rel_speed": 1.0
   },
   {
+    "name": "dar",
+    "seeds": 1,
+    "val_loss": 5.340773582458496,
+    "val_std": 0.0,
+    "params": 9652480,
+    "conn_params": 12288,
+    "tok_per_s": 6414.64628990202,
+    "mem": null,
+    "diverged": false,
+    "tokens": 12288000,
+    "delta": 0.015619277954101562,
+    "rel_speed": 0.602952485389206
+  },
+  {
+    "name": "mhc-n4-idinit",
+    "seeds": 1,
+    "val_loss": 5.350687026977539,
+    "val_std": 0.0,
+    "params": 10234765,
+    "conn_params": 594573,
+    "tok_per_s": 6174.270674671543,
+    "mem": null,
+    "diverged": false,
+    "tokens": 12288000,
+    "delta": 0.02553272247314453,
+    "rel_speed": 0.5803580868705638
+  },
+  {
     "name": "mhc-n4",
     "seeds": 1,
     "val_loss": 5.35511589050293,
@@ -110,6 +222,20 @@
     "tokens": 12288000,
     "delta": 0.029961585998535156,
     "rel_speed": 0.6051724919792062
+  },
+  {
+    "name": "postnorm-lr1e-3",
+    "seeds": 1,
+    "val_loss": 7.6286468505859375,
+    "val_std": 0.0,
+    "params": 9640192,
+    "conn_params": 6144,
+    "tok_per_s": 9922.603501471409,
+    "mem": null,
+    "diverged": false,
+    "tokens": 12288000,
+    "delta": 2.303492546081543,
+    "rel_speed": 0.9326871930821938
   },
   {
     "name": "postnorm",

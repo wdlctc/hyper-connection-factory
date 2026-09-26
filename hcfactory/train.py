@@ -43,6 +43,12 @@ DEFAULTS = dict(
 
 
 def parse_value(v: str):
+    # YAML 1.1 reads "3e-4" as a string, so try numbers first.
+    for cast in (int, float):
+        try:
+            return cast(v)
+        except ValueError:
+            pass
     try:
         return yaml.safe_load(v)
     except yaml.YAMLError:

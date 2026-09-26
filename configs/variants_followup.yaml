@@ -7,3 +7,5 @@ variants:
   # where does MUDDFormer's gain come from?
   - {name: muddformer-static, connection: muddformer, kwargs: {dynamic: false}}
   - {name: muddformer-r-only, connection: muddformer, kwargs: {qkv: false}}
+  # lr=1e-3 still collapsed to the unigram loss; 3e-4 trains (checked for 300 steps)
+  - {name: postnorm-lr3e-4, connection: postnorm, overrides: {lr: 3.0e-4, warmup_steps: 300}}
