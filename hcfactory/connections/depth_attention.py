@@ -32,22 +32,22 @@ class DepthRouter(nn.Module):
         self.key_norm_weight = nn.Parameter(torch.ones(d_model))  # affine of RMSNorm(keys)
 
     def weights(self, keys):
-        """keys: list of RMS-normalised sources [B,T,D] -> alpha [N,B,T,H]."""
+        """keys: list of RMS-normalised sources [B,T,D] -> alpha [B,T,H,N]."""
         # elementwise product + per-head sum (fuses well under torch.compile;
         # an einsum here lowers to a slow batched matmul for heads > 1)
         q = self.query * self.key_norm_weight
         logits = torch.stack(
-            [(k * q).unflatten(-1, (self.heads, -1)).sum(-1) for k in keys]
-        )
-        return logits.float().softmax(0)
+            [(k * q).unflatten(-1, (self.heads, -1)).sum(-1) for k in keys], dim=-1
+        )  # [B, T, H, N]: sources last, so the softmax reduces a contiguous dim
+        return logits.float().softmax(-1)
 
     def forward(self, sources, keys):
         alpha = self.weights(keys).to(sources[0].dtype)
         e = sources[0].shape[-1] // self.heads
         out = 0
-        for a, s in zip(alpha, sources):
+        for i, s in enumerate(sources):
             # [B,T,H] -> [B,T,D]: head weight repeated over its e channels
-            out = out + a.repeat_interleave(e, dim=-1) * s
+            out = out + alpha[..., i].repeat_interleave(e, dim=-1) * s
         return out, alpha
 
 
@@ -78,7 +78,7 @@ class AttnRes(Connection):
                 srcs, ks = sources + [partial], keys + [rms(partial)]
             h, alpha = self.routers[i](srcs, ks)
             if self.record_alpha:
-                self.last_alpha.append(alpha.detach().mean((1, 2)))
+                self.last_alpha.append(alpha.detach().mean((0, 1)))
             out = f(h)
             if self.block_size == 0:
                 sources.append(out)
