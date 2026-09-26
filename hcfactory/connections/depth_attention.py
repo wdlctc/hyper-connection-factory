@@ -33,18 +33,21 @@ class DepthRouter(nn.Module):
 
     def weights(self, keys):
         """keys: list of RMS-normalised sources [B,T,D] -> alpha [N,B,T,H]."""
-        q = (self.query * self.key_norm_weight).view(self.heads, -1)
+        # elementwise product + per-head sum (fuses well under torch.compile;
+        # an einsum here lowers to a slow batched matmul for heads > 1)
+        q = self.query * self.key_norm_weight
         logits = torch.stack(
-            [torch.einsum("bthe,he->bth", k.unflatten(-1, (self.heads, -1)), q) for k in keys]
+            [(k * q).unflatten(-1, (self.heads, -1)).sum(-1) for k in keys]
         )
         return logits.float().softmax(0)
 
     def forward(self, sources, keys):
         alpha = self.weights(keys).to(sources[0].dtype)
-        H = self.heads
+        e = sources[0].shape[-1] // self.heads
         out = 0
         for a, s in zip(alpha, sources):
-            out = out + (a.unsqueeze(-1) * s.unflatten(-1, (H, -1))).flatten(-2)
+            # [B,T,H] -> [B,T,D]: head weight repeated over its e channels
+            out = out + a.repeat_interleave(e, dim=-1) * s
         return out, alpha
 
 

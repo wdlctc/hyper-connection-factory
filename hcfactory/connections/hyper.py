@@ -54,8 +54,10 @@ class _HCSite(nn.Module):
 
     def forward(self, H, f, concat_read: bool):
         alpha, beta = self.coefficients(H)
-        # mix[..., c, :] = sum_i alpha[i, c] * H[..., i, :]
-        mix = torch.einsum("...nc,...ne->...ce", alpha.to(H.dtype), H)
+        alpha = alpha.to(H.dtype)
+        # mix[..., c, :] = sum_i alpha[i, c] * H[..., i, :]; n is small, so an
+        # unrolled elementwise sum (fused by torch.compile) beats einsum/bmm.
+        mix = sum(alpha[..., i, :].unsqueeze(-1) * H[..., i : i + 1, :] for i in range(self.n))
         read, resid = mix[..., : self.k, :], mix[..., self.k :, :]
         x = read.flatten(-2) if concat_read else read.squeeze(-2)
         y = f(x)
@@ -141,10 +143,12 @@ class _MHCSite(nn.Module):
     def forward(self, H, f, sinkhorn_iters: int):
         pre, post, res = self.maps(H, sinkhorn_iters)
         dt = H.dtype
-        x = torch.einsum("...n,...ne->...e", pre.to(dt), H)
+        pre, post, res = pre.to(dt), post.to(dt), res.to(dt)
+        x = sum(pre[..., j : j + 1] * H[..., j, :] for j in range(self.n))
         y = f(x)
         # out_k = post_k * y + sum_j res[j, k] * H_j
-        return torch.einsum("...jk,...je->...ke", res.to(dt), H) + post.to(dt).unsqueeze(-1) * y.unsqueeze(-2)
+        mixed = sum(res[..., j, :].unsqueeze(-1) * H[..., j : j + 1, :] for j in range(self.n))
+        return mixed + post.unsqueeze(-1) * y.unsqueeze(-2)
 
 
 class ManifoldHyperConnection(Connection):
