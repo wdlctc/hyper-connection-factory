@@ -1,0 +1,18 @@
+# GPU scaling ladder, size L: 24L x 1024 (302M non-emb), ~20 tokens/param.
+# Intended for DDP (e.g. --nproc 8 with grad_accum 1).
+n_layer: 24
+n_head: 16
+d_model: 1024
+data_dir: data/fineweb-edu
+seq_len: 1024
+batch_size: 32
+grad_accum: 8
+max_steps: 23000         # 6.03B tokens
+lr: 1.0e-3
+warmup_steps: 1000
+schedule: wsd
+cooldown_frac: 0.2
+eval_every: 1000
+eval_batches: 50
+compile: true
+out_dir: runs/scaling_gpu/l

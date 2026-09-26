@@ -88,7 +88,9 @@ def prepare_parquet(args, path, field, out_dir):
             # split each shard by row group so all workers stay busy
             n_rg = pq.ParquetFile(local).metadata.num_row_groups
             chunks = [(local, rg) for rg in range(n_rg)]
-            for toks in pool.imap(_encode_row_group, [(c, field) for c in chunks]):
+            # Finish the whole shard before writing: breaking out of an in-flight
+            # imap and then leaving the Pool context can hang.
+            for toks in pool.map(_encode_row_group, [(c, field) for c in chunks]):
                 if n_val < args.val_tokens:
                     k = min(len(toks), args.val_tokens - n_val)
                     toks[:k].tofile(val_f)
@@ -97,10 +99,8 @@ def prepare_parquet(args, path, field, out_dir):
                 k = min(len(toks), args.train_tokens - n_train)
                 toks[:k].tofile(train_f)
                 n_train += k
-                print(f"\rshard {fi + 1}/{len(files)} val {n_val / 1e6:.0f}M "
-                      f"train {n_train / 1e9:.3f}B / {args.train_tokens / 1e9:.3f}B", end="", flush=True)
-                if n_val + n_train >= need:
-                    break
+            print(f"\rshard {fi + 1}/{len(files)} val {n_val / 1e6:.0f}M "
+                  f"train {n_train / 1e9:.3f}B / {args.train_tokens / 1e9:.3f}B", end="", flush=True)
             if args.delete_shards:
                 os.remove(os.path.realpath(local))
             if n_val + n_train >= need:

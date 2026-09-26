@@ -22,9 +22,12 @@ def main():
     ap.add_argument("--variants", default="configs/variants.yaml")
     ap.add_argument("--steps", type=int, default=20)
     ap.add_argument("--compile", action="store_true")
+    ap.add_argument("--only", default=None, help="comma-separated variant names")
     args = ap.parse_args()
     cfg = yaml.safe_load(open(args.config))
     variants = yaml.safe_load(open(args.variants))["variants"]
+    if args.only:
+        variants = [v for v in variants if v["name"] in args.only.split(",")]
     dev = torch.device("cuda" if torch.cuda.is_available() else
                        "mps" if torch.backends.mps.is_available() else "cpu")
     B, T = cfg.get("batch_size", 16), cfg.get("seq_len", 1024)
@@ -39,6 +42,9 @@ def main():
     print(f"device={dev} B={B} T={T}")
     print(f"{'variant':18s} {'params':>8s} {'+conn':>8s} {'tok/s':>9s} {'mem GB':>7s}")
     for v in variants:
+        # fresh compile cache per variant: otherwise dynamo hits its recompile
+        # limit after ~8 models and silently falls back to eager
+        torch._dynamo.reset()
         m = GPT(ModelConfig(n_layer=cfg["n_layer"], n_head=cfg["n_head"], d_model=cfg["d_model"],
                             max_seq_len=T, connection=v["connection"],
                             connection_kwargs=v.get("kwargs", {}))).to(dev)

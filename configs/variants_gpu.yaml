@@ -1,0 +1,10 @@
+# 8 variants = one per GPU: the HC family plus the three strongest tiny-scale variants.
+variants:
+  - {name: prenorm,         connection: prenorm}
+  - {name: hc-static-n4,    connection: hc,          kwargs: {n: 4, dynamic: false}}
+  - {name: hc-dynamic-n4,   connection: hc,          kwargs: {n: 4, dynamic: true}}
+  - {name: mhc-n4,          connection: mhc,         kwargs: {n: 4}}
+  - {name: frac-dynamic-m2, connection: frac,        kwargs: {m: 2, dynamic: true}}
+  - {name: muddformer,      connection: muddformer}
+  - {name: mhar-h4,         connection: mhar,        kwargs: {heads: 4}}
+  - {name: attnres-full,    connection: attnres}
