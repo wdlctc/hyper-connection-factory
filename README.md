@@ -29,14 +29,53 @@ same function as the pre-norm baseline. This is checked by
 
 ## Results
 
-> Status: **laptop-scale smoke comparison only** (12 layers, d=256, 9.6M non-embedding params,
-> 12.3M FineWeb-Edu tokens, 1 seed, Apple M3 Pro). Seed-to-seed noise has not been measured
-> yet, so treat small differences as unresolved. GPU-scale runs (`configs/gpt124m.yaml`, `configs/gpt350m.yaml`)
-> are the next step; see [Reproducing](#reproducing).
+### Tiny scale (laptop)
 
-See [`results/tiny/`](results/tiny) for the table, loss curves and the quality-vs-throughput plot.
+12 layers, d=256, 9.6M non-embedding params, 12.3M FineWeb-Edu tokens, **1 seed**,
+Apple M3 Pro (fp32, MPS). Validation loss is measured on a fixed set of 40×24×256 tokens.
+Throughput is relative to pre-norm **on MPS**; GPU ratios will differ, especially after `torch.compile`.
 
-<!-- RESULTS:tiny -->
+| # | variant | val loss | Δ vs prenorm | params (non-emb) | +conn params | throughput (rel.) | 
+|---|---|---|---|---|---|---|
+| 1 | muddformer | 5.0896 | -0.2356 | 9.86M | 217.5K | 0.52× |
+| 2 | muddformer-static | 5.2387 | -0.0865 | 9.65M | 0.3K | 0.63× |
+| 3 | muddformer-r-only | 5.2447 | -0.0804 | 9.84M | 202.5K | 0.78× |
+| 4 | mhar-h4 | 5.2574 | -0.0678 | 9.65M | 12.8K | 0.57× |
+| 5 | hc-static-n4 | 5.2734 | -0.0518 | 9.64M | 0.6K | 0.74× |
+| 6 | frac-dynamic-m2 | 5.2836 | -0.0416 | 9.66M | 21.8K | 0.86× |
+| 7 | attnres-full | 5.2918 | -0.0334 | 9.65M | 12.8K | 0.52× |
+| 8 | denseformer | 5.2929 | -0.0322 | 9.64M | 0.1K | 0.71× |
+| 9 | dar-block | 5.2995 | -0.0257 | 9.65M | 12.3K | 0.75× |
+| 10 | hc-dynamic-n4 | 5.3001 | -0.0250 | 9.69M | 49.8K | 0.63× |
+| 11 | laurel-rw-lr | 5.3006 | -0.0245 | 9.84M | 196.7K | 0.75× |
+| 12 | attnres-block | 5.3046 | -0.0205 | 9.65M | 12.8K | 0.79× |
+| 13 | prenorm | 5.3252 | +0.0000 | 9.64M | 0.0K | 1.00× |
+| 14 | dar | 5.3408 | +0.0156 | 9.65M | 12.3K | 0.60× |
+| 15 | mhc-n4-idinit | 5.3507 | +0.0255 | 10.23M | 594.6K | 0.58× |
+| 16 | mhc-n4 | 5.3551 | +0.0300 | 10.23M | 594.6K | 0.61× |
+| 17 | postnorm-lr1e-3 | 7.6286 | +2.3035 | 9.64M | 6.1K | 0.93× |
+| 18 | postnorm | 7.6768 | +2.3517 | 9.64M | 6.1K | 0.99× |
+
+![val loss](results/tiny/val_loss.png)
+![quality vs speed](results/tiny/tradeoff.png)
+
+What this run shows, and what it does not:
+
+* **MUDDFormer is far ahead (−0.236).** Its two ingredients are complementary. Static weights
+  only (`muddformer-static`, −0.087) and a single dynamic R stream (`muddformer-r-only`,
+  −0.080) each recover only about a third of the gain.
+* **Depth attention needs heads.** MHAR (−0.068) beats single-head AttnRes (−0.033), and full
+  AttnRes beats block AttnRes (−0.021).
+* **Cheap wins.** Static HC (−0.052, 0.6K extra params) and DenseFormer (−0.032, 0.1K) help
+  with almost no parameters. Frac-Connections has the smallest slowdown (0.86×).
+* **mHC is worse than pre-norm here** (+0.030), including with a stream-preserving init
+  (`mhc-n4-idinit`, +0.026). Its initialisation is unpublished, see the implementation notes.
+* **Post-norm** collapses to the unigram loss (≈7.6) at lr 3e-3 and 1e-3. A 300-step check shows
+  it trains at 3e-4. This is the known post-LN instability, not a bug, and a full lr 3e-4 run is
+  pending.
+* **Caveats.** One seed, 12.3M tokens, 9.6M params. Seed noise is still being measured (extra
+  seeds for pre-norm and MUDDFormer are pending), so differences of a few hundredths among the
+  middle of the table are **not yet resolved**.
 
 ## Quickstart
 
