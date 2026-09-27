@@ -1,0 +1,6 @@
+# Size-L run order (each variant uses all 8 GPUs via DDP).
+variants:
+  - {name: prenorm,       connection: prenorm}
+  - {name: mhc-n4,        connection: mhc,        kwargs: {n: 4}}
+  - {name: hc-dynamic-n4, connection: hc,         kwargs: {n: 4, dynamic: true}}
+  - {name: muddformer,    connection: muddformer}
