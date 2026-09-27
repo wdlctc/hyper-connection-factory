@@ -2,7 +2,8 @@
 
     python scripts/scaling.py runs/scaling --out results/scaling
 
-Expects ``<root>/w<d>/<variant>_s<seed>/summary.json``. Writes ``scaling.md``,
+Expects ``<root>/<size>/<variant>_s<seed>/summary.json`` (e.g. ``w128`` or ``s``/``m``/``l``);
+sizes are ordered by the baseline's parameter count. Writes ``scaling.md``,
 ``scaling.json``, ``loss_vs_params.png`` and ``delta_vs_params.png``
 (Δ = variant − prenorm at the same width; negative = better). If a width has
 several seeds of a variant, the mean is plotted and the std is shown as error bars.
@@ -30,15 +31,16 @@ def main():
     args = ap.parse_args()
     os.makedirs(args.out, exist_ok=True)
 
-    data: dict = {}  # variant -> width -> list[summary]
-    for f in glob.glob(os.path.join(args.root, "w*", "*", "summary.json")):
-        width = int(re.search(r"/w(\d+)/", f).group(1))
+    data: dict = {}  # variant -> size label -> list[summary]
+    for f in glob.glob(os.path.join(args.root, "*", "*", "summary.json")):
+        width = os.path.basename(os.path.dirname(os.path.dirname(f)))
         s = json.load(open(f))
         name = re.sub(r"_s\d+$", "", os.path.basename(os.path.dirname(f)))
         data.setdefault(name, {}).setdefault(width, []).append(s)
     if args.baseline not in data:
         raise SystemExit(f"no {args.baseline} runs under {args.root}")
-    widths = sorted({w for v in data.values() for w in v})
+    size_params = {w: runs[0]["params_non_embedding"] for w, runs in data[args.baseline].items()}
+    widths = sorted({w for v in data.values() for w in v}, key=lambda w: size_params.get(w, 0))
 
     def stat(runs):
         xs = [r["final_val_loss"] for r in runs]
@@ -57,7 +59,7 @@ def main():
 
     # markdown: Δ vs baseline, one column per width
     names = sorted(data, key=lambda n: (n != args.baseline, n))
-    head = "| variant | " + " | ".join(f"d={w}" for w in widths) + " |"
+    head = "| variant | " + " | ".join(str(w) for w in widths) + " |"
     lines = [head, "|---" * (len(widths) + 1) + "|"]
     for n in names:
         cells = []
@@ -66,9 +68,10 @@ def main():
             if r is None:
                 cells.append("—")
             elif n == args.baseline:
-                cells.append(f"{r['val_loss']:.4f}")
+                cells.append(f"{r['val_loss']:.4f}" + (f" ± {r['std']:.4f}" if r["seeds"] > 1 else ""))
             else:
-                cells.append(f"{r['delta']:+.4f}" if r["delta"] is not None else f"{r['val_loss']:.4f}")
+                c = f"{r['delta']:+.4f}" if r["delta"] is not None else f"{r['val_loss']:.4f}"
+                cells.append(c + (f" ± {r['std']:.4f} (n={r['seeds']})" if r["seeds"] > 1 else ""))
         lines.append(f"| {n} | " + " | ".join(cells) + " |")
     bparams = {r["width"]: r["params"] for r in rows if r["variant"] == args.baseline}
     lines.append("| *non-emb params* | " + " | ".join(

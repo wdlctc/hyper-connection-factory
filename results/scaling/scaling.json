@@ -1,0 +1,182 @@
+[
+  {
+    "variant": "frac-dynamic-m2",
+    "width": "w128",
+    "params": 2570144,
+    "val_loss": 5.44213342666626,
+    "std": 0.0,
+    "seeds": 1,
+    "delta": -0.05929374694824219,
+    "tok_per_s": 12803.167012337486
+  },
+  {
+    "variant": "frac-dynamic-m2",
+    "width": "w256",
+    "params": 9661984,
+    "val_loss": 5.283552169799805,
+    "std": 0.0,
+    "seeds": 1,
+    "delta": -0.041602134704589844,
+    "tok_per_s": 9145.228171788329
+  },
+  {
+    "variant": "frac-dynamic-m2",
+    "width": "w384",
+    "params": 21275808,
+    "val_loss": 5.228420734405518,
+    "std": 0.0,
+    "seeds": 1,
+    "delta": -0.11425399780273438,
+    "tok_per_s": 5067.035611743234
+  },
+  {
+    "variant": "hc-dynamic-n2",
+    "width": "w256",
+    "params": 9677296,
+    "val_loss": 5.264946937561035,
+    "std": 0.0,
+    "seeds": 1,
+    "delta": -0.060207366943359375,
+    "tok_per_s": 5538.0861880670445
+  },
+  {
+    "variant": "hc-dynamic-n4",
+    "width": "w128",
+    "params": 2584304,
+    "val_loss": 5.374211311340332,
+    "std": 0.0,
+    "seeds": 1,
+    "delta": -0.12721586227416992,
+    "tok_per_s": 6416.624377024391
+  },
+  {
+    "variant": "hc-dynamic-n4",
+    "width": "w256",
+    "params": 9689968,
+    "val_loss": 5.3001484870910645,
+    "std": 0.0,
+    "seeds": 1,
+    "delta": -0.025005817413330078,
+    "tok_per_s": 6665.684566515969
+  },
+  {
+    "variant": "hc-dynamic-n4",
+    "width": "w384",
+    "params": 21317616,
+    "val_loss": 5.2389020919799805,
+    "std": 0.0,
+    "seeds": 1,
+    "delta": -0.10377264022827148,
+    "tok_per_s": 2714.1026317086485
+  },
+  {
+    "variant": "hc-static-n2",
+    "width": "w256",
+    "params": 9640384,
+    "val_loss": 5.288630485534668,
+    "std": 0.0,
+    "seeds": 1,
+    "delta": -0.03652381896972656,
+    "tok_per_s": 6889.637776861129
+  },
+  {
+    "variant": "hc-static-n4",
+    "width": "w128",
+    "params": 2559680,
+    "val_loss": 5.414070129394531,
+    "std": 0.0,
+    "seeds": 1,
+    "delta": -0.0873570442199707,
+    "tok_per_s": 7602.708044464373
+  },
+  {
+    "variant": "hc-static-n4",
+    "width": "w256",
+    "params": 9640768,
+    "val_loss": 5.273394584655762,
+    "std": 0.0,
+    "seeds": 1,
+    "delta": -0.05175971984863281,
+    "tok_per_s": 7835.652226362615
+  },
+  {
+    "variant": "hc-static-n4",
+    "width": "w384",
+    "params": 21243840,
+    "val_loss": 5.278806686401367,
+    "std": 0.0,
+    "seeds": 1,
+    "delta": -0.06386804580688477,
+    "tok_per_s": 2854.5689693803224
+  },
+  {
+    "variant": "hc-static-n8",
+    "width": "w256",
+    "params": 9642112,
+    "val_loss": 5.232471466064453,
+    "std": 0.0,
+    "seeds": 1,
+    "delta": -0.0926828384399414,
+    "tok_per_s": 1949.76117971806
+  },
+  {
+    "variant": "mhc-n4",
+    "width": "w128",
+    "params": 2856717,
+    "val_loss": 5.485379219055176,
+    "std": 0.0,
+    "seeds": 1,
+    "delta": -0.016047954559326172,
+    "tok_per_s": 6407.543467815765
+  },
+  {
+    "variant": "mhc-n4",
+    "width": "w256",
+    "params": 10234765,
+    "val_loss": 5.35511589050293,
+    "std": 0.0,
+    "seeds": 1,
+    "delta": 0.029961585998535156,
+    "tok_per_s": 6438.264331756363
+  },
+  {
+    "variant": "mhc-n4",
+    "width": "w384",
+    "params": 22134797,
+    "val_loss": 5.30496883392334,
+    "std": 0.0,
+    "seeds": 1,
+    "delta": -0.03770589828491211,
+    "tok_per_s": 2639.8411082808084
+  },
+  {
+    "variant": "prenorm",
+    "width": "w128",
+    "params": 2559104,
+    "val_loss": 5.501427173614502,
+    "std": 0.0,
+    "seeds": 1,
+    "delta": 0.0,
+    "tok_per_s": 16825.377022625322
+  },
+  {
+    "variant": "prenorm",
+    "width": "w256",
+    "params": 9640192,
+    "val_loss": 5.3251543045043945,
+    "std": 0.0,
+    "seeds": 1,
+    "delta": 0.0,
+    "tok_per_s": 10638.726011323039
+  },
+  {
+    "variant": "prenorm",
+    "width": "w384",
+    "params": 21243264,
+    "val_loss": 5.342674732208252,
+    "std": 0.0,
+    "seeds": 1,
+    "delta": 0.0,
+    "tok_per_s": 6437.432207113308
+  }
+]

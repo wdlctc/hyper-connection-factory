@@ -29,53 +29,104 @@ same function as the pre-norm baseline. This is checked by
 
 ## Results
 
-### Tiny scale (laptop)
+### GPU scaling (8×H100): HC family and friends at S and M scale
 
-12 layers, d=256, 9.6M non-embedding params, 12.3M FineWeb-Edu tokens, **1 seed**,
-Apple M3 Pro (fp32, MPS). Validation loss is measured on a fixed set of 40×24×256 tokens.
-Throughput is relative to pre-norm **on MPS**; GPU ratios will differ, especially after `torch.compile`.
+FineWeb-Edu, GPT-2 tokenizer, ~20 training tokens per non-embedding parameter, global batch 262K
+tokens, WSD schedule, bf16 + `torch.compile`, one variant per GPU. Configs: `configs/scaling_gpu/{s,m}.yaml`,
+variants: `configs/variants_gpu.yaml`.
+
+| size | shape | non-emb params | tokens |
+|---|---|---|---|
+| S | 12L × 512 | 38.5M | 0.79B |
+| M | 12L × 768 | 85.0M | 1.70B |
+
+Row `prenorm` shows its validation loss; the other rows show Δ vs pre-norm at the same size (negative = better).
+Where there are several seeds the table gives mean ± std (pre-norm at M: 3 seeds, std 0.002).
+
+| variant | s | m |
+|---|---|---|
+| prenorm | 3.4439 | 3.1993 ± 0.0021 |
+| attnres-full | -0.0407 | -0.0130 |
+| frac-dynamic-m2 | -0.0245 | -0.0150 |
+| hc-dynamic-n4 | -0.0699 | -0.0457 ± 0.0042 (n=3) |
+| hc-static-n4 | -0.0355 | -0.0075 |
+| mhar-h4 | -0.0426 | -0.0292 |
+| mhc-n4 | -0.0621 | -0.0495 ± 0.0029 (n=3) |
+| muddformer | -0.1115 | -0.0698 ± 0.0011 (n=2) |
+| *non-emb params* | 38.5M | 85.0M |
+
+![gain vs size](results/scaling_gpu/delta_vs_params.png)
+
+Full per-size tables with throughput and memory: [`results/scaling_gpu_s`](results/scaling_gpu_s),
+[`results/scaling_gpu_m`](results/scaling_gpu_m).
+
+What the GPU runs show:
+
+* **Dynamic, input-dependent mixing is what survives scale.** At M, MUDDFormer (−0.070, 2 seeds),
+  mHC (−0.050, 3 seeds) and dynamic HC (−0.046, 3 seeds) are 10–30× the pre-norm seed std.
+  Static HC shrinks from −0.036 at S to −0.008 at M.
+* **Gains shrink from S to M for every variant.** mHC shrinks least (−0.062 → −0.050). Whether
+  the gains level off or vanish needs the L size (24L × 1024, 302M, `configs/scaling_gpu/l.yaml`),
+  which has not been run yet.
+* **Depth attention.** MHAR beats single-head AttnRes at M (−0.029 vs −0.013, 1 seed each).
+* **Throughput** (relative to pre-norm, measured with 8 jobs sharing one node) ranges from 0.47×
+  (HC/mHC) to 0.78× (Frac). MHAR's 0.23× is an **implementation** limit, not the method's:
+  `torch.compile` fuses the multi-head RMSNorm backward and the softmax into one slow kernel.
+  Contributions welcome.
+* **Small scale misleads.** mHC was *worse* than pre-norm in the laptop runs below and static HC
+  beat dynamic HC there. Both reverse on GPU.
+
+### Laptop scale (sanity check only)
+
+12 layers, d=256, 9.6M non-embedding params, 12.3M FineWeb-Edu tokens, Apple M3 Pro (fp32, MPS).
+Pre-norm and MUDDFormer have 3 seeds, pre-norm's std is 0.006. Every other row is a single seed.
+Throughput is measured on MPS.
 
 | # | variant | val loss | Δ vs prenorm | params (non-emb) | +conn params | throughput (rel.) | 
 |---|---|---|---|---|---|---|
-| 1 | muddformer | 5.0896 | -0.2356 | 9.86M | 217.5K | 0.52× |
-| 2 | muddformer-static | 5.2387 | -0.0865 | 9.65M | 0.3K | 0.63× |
-| 3 | muddformer-r-only | 5.2447 | -0.0804 | 9.84M | 202.5K | 0.78× |
-| 4 | mhar-h4 | 5.2574 | -0.0678 | 9.65M | 12.8K | 0.57× |
-| 5 | hc-static-n4 | 5.2734 | -0.0518 | 9.64M | 0.6K | 0.74× |
-| 6 | frac-dynamic-m2 | 5.2836 | -0.0416 | 9.66M | 21.8K | 0.86× |
-| 7 | attnres-full | 5.2918 | -0.0334 | 9.65M | 12.8K | 0.52× |
-| 8 | denseformer | 5.2929 | -0.0322 | 9.64M | 0.1K | 0.71× |
-| 9 | dar-block | 5.2995 | -0.0257 | 9.65M | 12.3K | 0.75× |
-| 10 | hc-dynamic-n4 | 5.3001 | -0.0250 | 9.69M | 49.8K | 0.63× |
-| 11 | laurel-rw-lr | 5.3006 | -0.0245 | 9.84M | 196.7K | 0.75× |
-| 12 | attnres-block | 5.3046 | -0.0205 | 9.65M | 12.8K | 0.79× |
-| 13 | prenorm | 5.3252 | +0.0000 | 9.64M | 0.0K | 1.00× |
-| 14 | dar | 5.3408 | +0.0156 | 9.65M | 12.3K | 0.60× |
-| 15 | mhc-n4-idinit | 5.3507 | +0.0255 | 10.23M | 594.6K | 0.58× |
-| 16 | mhc-n4 | 5.3551 | +0.0300 | 10.23M | 594.6K | 0.61× |
-| 17 | postnorm-lr1e-3 | 7.6286 | +2.3035 | 9.64M | 6.1K | 0.93× |
-| 18 | postnorm | 7.6768 | +2.3517 | 9.64M | 6.1K | 0.99× |
+| 1 | muddformer | 5.1240 ± 0.0333 | -0.1964 | 9.86M | 217.5K | 0.57× |
+| 2 | muddformer-static | 5.2387 ± 0.0000 | -0.0818 | 9.65M | 0.3K | 0.69× |
+| 3 | muddformer-r-only | 5.2447 ± 0.0000 | -0.0757 | 9.84M | 202.5K | 0.86× |
+| 4 | mhar-h4 | 5.2574 ± 0.0000 | -0.0631 | 9.65M | 12.8K | 0.63× |
+| 5 | hc-static-n4 | 5.2734 ± 0.0000 | -0.0470 | 9.64M | 0.6K | 0.81× |
+| 6 | frac-dynamic-m2 | 5.2836 ± 0.0000 | -0.0369 | 9.66M | 21.8K | 0.94× |
+| 7 | attnres-full | 5.2918 ± 0.0000 | -0.0286 | 9.65M | 12.8K | 0.57× |
+| 8 | denseformer | 5.2929 ± 0.0000 | -0.0275 | 9.64M | 0.1K | 0.78× |
+| 9 | dar-block | 5.2995 ± 0.0000 | -0.0209 | 9.65M | 12.3K | 0.82× |
+| 10 | hc-dynamic-n4 | 5.3001 ± 0.0000 | -0.0203 | 9.69M | 49.8K | 0.69× |
+| 11 | laurel-rw-lr | 5.3006 ± 0.0000 | -0.0198 | 9.84M | 196.7K | 0.82× |
+| 12 | attnres-block | 5.3046 ± 0.0000 | -0.0158 | 9.65M | 12.8K | 0.87× |
+| 13 | prenorm | 5.3204 ± 0.0055 | +0.0000 | 9.64M | 0.0K | 1.00× |
+| 14 | dar | 5.3408 ± 0.0000 | +0.0204 | 9.65M | 12.3K | 0.66× |
+| 15 | mhc-n4-idinit | 5.3507 ± 0.0000 | +0.0303 | 10.23M | 594.6K | 0.63× |
+| 16 | mhc-n4 | 5.3551 ± 0.0000 | +0.0347 | 10.23M | 594.6K | 0.66× |
+| 17 | postnorm-lr3e-4 | 5.9128 ± 0.0000 | +0.5924 | 9.64M | 6.1K | 0.89× |
+| 18 | postnorm-lr1e-3 | 7.6286 ± 0.0000 | +2.3082 | 9.64M | 6.1K | 1.02× |
+| 19 | postnorm | 7.6768 ± 0.0000 | +2.3564 | 9.64M | 6.1K | 1.08× |
 
-![val loss](results/tiny/val_loss.png)
-![quality vs speed](results/tiny/tradeoff.png)
+* MUDDFormer's gain is robust across seeds (−0.196 ± 0.033). Its static-only and R-stream-only
+  ablations each recover about 40% of it, so both ingredients matter.
+* mHC and dynamic HC look weak here but are among the best on GPU (see above), so tiny-scale
+  rankings do not transfer.
+* Post-norm collapses to the unigram loss at lr ≥ 1e-3. At 3e-4 it trains but stays far behind
+  pre-norm (5.91), and its LR has not been tuned further.
 
-What this run shows, and what it does not:
+**Width ladder on MPS** (12L, d = 128…384, a fixed 12.3M tokens, LR ∝ 1/d; `configs/scaling/`).
+Pre-norm at d=384 is *worse* than at d=256 because the larger models are undertrained on this
+budget. That inflates every d=384 gain, so **do not read a scaling trend from this table**. The
+GPU ladder above, where tokens grow with size, is the one to trust.
 
-* **MUDDFormer is far ahead (−0.236).** Its two ingredients are complementary. Static weights
-  only (`muddformer-static`, −0.087) and a single dynamic R stream (`muddformer-r-only`,
-  −0.080) each recover only about a third of the gain.
-* **Depth attention needs heads.** MHAR (−0.068) beats single-head AttnRes (−0.033), and full
-  AttnRes beats block AttnRes (−0.021).
-* **Cheap wins.** Static HC (−0.052, 0.6K extra params) and DenseFormer (−0.032, 0.1K) help
-  with almost no parameters. Frac-Connections has the smallest slowdown (0.86×).
-* **mHC is worse than pre-norm here** (+0.030), including with a stream-preserving init
-  (`mhc-n4-idinit`, +0.026). Its initialisation is unpublished, see the implementation notes.
-* **Post-norm** collapses to the unigram loss (≈7.6) at lr 3e-3 and 1e-3. A 300-step check shows
-  it trains at 3e-4. This is the known post-LN instability, not a bug, and a full lr 3e-4 run is
-  pending.
-* **Caveats.** One seed, 12.3M tokens, 9.6M params. Seed noise is still being measured (extra
-  seeds for pre-norm and MUDDFormer are pending), so differences of a few hundredths among the
-  middle of the table are **not yet resolved**.
+| variant | w128 | w256 | w384 |
+|---|---|---|---|
+| prenorm | 5.5014 | 5.3252 | 5.3427 |
+| frac-dynamic-m2 | -0.0593 | -0.0416 | -0.1143 |
+| hc-dynamic-n2 | — | -0.0602 | — |
+| hc-dynamic-n4 | -0.1272 | -0.0250 | -0.1038 |
+| hc-static-n2 | — | -0.0365 | — |
+| hc-static-n4 | -0.0874 | -0.0518 | -0.0639 |
+| hc-static-n8 | — | -0.0927 | — |
+| mhc-n4 | -0.0160 | +0.0300 | -0.0377 |
+| *non-emb params* | 2.6M | 9.6M | 21.2M |
 
 ## Quickstart
 
