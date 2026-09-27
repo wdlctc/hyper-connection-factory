@@ -29,7 +29,7 @@ same function as the pre-norm baseline. This is checked by
 
 ## Results
 
-### GPU scaling (8×H100): HC family and friends at S and M scale
+### GPU scaling (8×H100): HC family and friends from 38M to 300M
 
 FineWeb-Edu, GPT-2 tokenizer, ~20 training tokens per non-embedding parameter, global batch 262K
 tokens, WSD schedule, bf16 + `torch.compile`, one variant per GPU. Configs: `configs/scaling_gpu/{s,m}.yaml`,
@@ -39,21 +39,25 @@ variants: `configs/variants_gpu.yaml`.
 |---|---|---|---|
 | S | 12L × 512 | 38.5M | 0.79B |
 | M | 12L × 768 | 85.0M | 1.70B |
+| L | 24L × 1024 | 303.6M | 6.03B (8-GPU DDP per variant) |
 
 Row `prenorm` shows its validation loss; the other rows show Δ vs pre-norm at the same size (negative = better).
 Where there are several seeds the table gives mean ± std (pre-norm at M: 3 seeds, std 0.002).
 
-| variant | s | m |
-|---|---|---|
-| prenorm | 3.4439 | 3.1993 ± 0.0021 |
-| attnres-full | -0.0407 | -0.0130 |
-| frac-dynamic-m2 | -0.0245 | -0.0150 |
-| hc-dynamic-n4 | -0.0699 | -0.0457 ± 0.0042 (n=3) |
-| hc-static-n4 | -0.0355 | -0.0075 |
-| mhar-h4 | -0.0426 | -0.0292 |
-| mhc-n4 | -0.0621 | -0.0495 ± 0.0029 (n=3) |
-| muddformer | -0.1115 | -0.0698 ± 0.0011 (n=2) |
-| *non-emb params* | 38.5M | 85.0M |
+| variant | s | m | l |
+|---|---|---|---|
+| prenorm | 3.4439 | 3.1993 ± 0.0021 | 2.8405 |
+| attnres-full | -0.0407 | -0.0130 | — |
+| frac-dynamic-m2 | -0.0245 | -0.0150 | — |
+| hc-dynamic-n4 | -0.0699 | -0.0457 ± 0.0042 (n=3) | -0.0360 |
+| hc-static-n4 | -0.0355 | -0.0075 | — |
+| mhar-h4 | -0.0426 | -0.0292 | — |
+| mhc-n4 | -0.0621 | -0.0495 ± 0.0029 (n=3) | -0.0396 |
+| muddformer | -0.1115 | -0.0698 ± 0.0011 (n=2) | — |
+| *non-emb params* | 38.5M | 85.0M | 303.6M |
+
+At L only pre-norm, mHC and dynamic HC finished (1 seed each). MUDDFormer diverged at L,
+see below. The other variants were not run at L.
 
 ![gain vs size](results/scaling_gpu/delta_vs_params.png)
 
@@ -62,17 +66,21 @@ Full per-size tables with throughput and memory: [`results/scaling_gpu_s`](resul
 
 What the GPU runs show:
 
-* **Dynamic, input-dependent mixing is what survives scale.** At M, MUDDFormer (−0.070, 2 seeds),
-  mHC (−0.050, 3 seeds) and dynamic HC (−0.046, 3 seeds) are 10–30× the pre-norm seed std.
-  Static HC shrinks from −0.036 at S to −0.008 at M.
-* **Gains shrink from S to M for every variant.** mHC shrinks least (−0.062 → −0.050). Whether
-  the gains level off or vanish needs the L size (24L × 1024, 302M, `configs/scaling_gpu/l.yaml`),
-  which has not been run yet.
+* **mHC and dynamic HC keep a real gain up to 300M**, shrinking slowly: mHC −0.062 → −0.050 → −0.040,
+  dynamic HC −0.070 → −0.046 → −0.036 from S to M to L. The gain drops by roughly 20–25% for each
+  ~3× increase in size, so it is shrinking, but it has not vanished by 300M.
+* **Static mixing does not survive scale.** Static HC falls from −0.036 at S to −0.008 at M.
+  AttnRes (−0.041 → −0.013) and Frac (−0.025 → −0.015) also shrink quickly.
+* **MUDDFormer is the best variant at S and M** (−0.112, then −0.070 ± 0.001) **but diverged at L**
+  (24 layers). Gradient spikes began around step 3000, the loss blew up near step 3300, and the
+  model collapsed to the initial loss by step 7000. The paper uses *PrePostDANorm* for deep
+  models, and this implementation omits it (see implementation notes). Treat MUDDFormer at
+  ≥24 layers as unstable here until PrePostDANorm is added.
 * **Depth attention.** MHAR beats single-head AttnRes at M (−0.029 vs −0.013, 1 seed each).
-* **Throughput** (relative to pre-norm, measured with 8 jobs sharing one node) ranges from 0.47×
-  (HC/mHC) to 0.78× (Frac). MHAR's 0.23× is an **implementation** limit, not the method's:
-  `torch.compile` fuses the multi-head RMSNorm backward and the softmax into one slow kernel.
-  Contributions welcome.
+* **Throughput** (relative to pre-norm): at L with 8-GPU DDP, mHC runs at 0.53× and dynamic HC
+  at 0.51×. At S/M (8 jobs sharing a node) the range is 0.47× (HC/mHC) to 0.78× (Frac).
+  MHAR's 0.23× is an **implementation** limit, not the method's: `torch.compile` fuses the
+  multi-head RMSNorm backward and the softmax into one slow kernel. Contributions welcome.
 * **Small scale misleads.** mHC was *worse* than pre-norm in the laptop runs below and static HC
   beat dynamic HC there. Both reverse on GPU.
 
@@ -228,7 +236,8 @@ The choices below are ones the papers leave open, so we decided them ourselves:
 * **DenseFormer**: dilation supported, period fixed to 1.
 * **MUDDFormer**: DA weights from `GELU(RMSNorm(X_i) W1) W2 + a_i` with W2 = 0 and a_i one-hot.
   The last layer produces only the R stream, with hidden width ×4. Not included:
-  PrePostDANorm and the depth-varying FFN width.
+  PrePostDANorm and the depth-varying FFN width. Without PrePostDANorm the 24-layer (L)
+  run diverged, so add it before using MUDDFormer in deep models.
 * **LAuReL**: applied per sublayer. The RW weights are bounded as `(α, β) = 2·softmax(w)`
   (α = β = 1 at init). The paper asks for a bounding map but does not fix one. LR uses the
   paper's "column orthogonal" A init and B = 0. PA is not implemented.

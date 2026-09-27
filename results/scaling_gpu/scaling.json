@@ -41,6 +41,16 @@
   },
   {
     "variant": "hc-dynamic-n4",
+    "width": "l",
+    "params": 304007392,
+    "val_loss": 2.8045156002044678,
+    "std": 0.0,
+    "seeds": 1,
+    "delta": -0.036029815673828125,
+    "tok_per_s": 625343.1539204282
+  },
+  {
+    "variant": "hc-dynamic-n4",
     "width": "m",
     "params": 85101936,
     "val_loss": 3.1536402702331543,
@@ -101,6 +111,16 @@
   },
   {
     "variant": "mhc-n4",
+    "width": "l",
+    "params": 308349205,
+    "val_loss": 2.8009088039398193,
+    "std": 0.0,
+    "seeds": 1,
+    "delta": -0.03963661193847656,
+    "tok_per_s": 652913.9780689114
+  },
+  {
+    "variant": "mhc-n4",
     "width": "m",
     "params": 86736269,
     "val_loss": 3.149827559789022,
@@ -138,6 +158,16 @@
     "seeds": 1,
     "delta": -0.1114809513092041,
     "tok_per_s": 260181.90851408243
+  },
+  {
+    "variant": "prenorm",
+    "width": "l",
+    "params": 303612928,
+    "val_loss": 2.840545415878296,
+    "std": 0.0,
+    "seeds": 1,
+    "delta": 0.0,
+    "tok_per_s": 1234294.0317953515
   },
   {
     "variant": "prenorm",
