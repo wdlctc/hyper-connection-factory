@@ -74,8 +74,7 @@ What the GPU runs show:
 * **MUDDFormer is the best variant at S and M** (−0.112, then −0.070 ± 0.001) **but diverged at L**
   (24 layers). Gradient spikes began around step 3000, the loss blew up near step 3300, and the
   model collapsed to the initial loss by step 7000. The paper uses *PrePostDANorm* for deep
-  models, and this implementation omits it (see implementation notes). Treat MUDDFormer at
-  ≥24 layers as unstable here until PrePostDANorm is added.
+  models. It is now implemented (`prepost_norm: true`), and the L rerun with it is pending.
 * **Depth attention.** MHAR beats single-head AttnRes at M (−0.029 vs −0.013, 1 seed each).
 * **Throughput** (relative to pre-norm): at L with 8-GPU DDP, mHC runs at 0.53× and dynamic HC
   at 0.51×. At S/M (8 jobs sharing a node) the range is 0.47× (HC/mHC) to 0.78× (Frac).
@@ -236,8 +235,9 @@ The choices below are ones the papers leave open, so we decided them ourselves:
 * **DenseFormer**: dilation supported, period fixed to 1.
 * **MUDDFormer**: DA weights from `GELU(RMSNorm(X_i) W1) W2 + a_i` with W2 = 0 and a_i one-hot.
   The last layer produces only the R stream, with hidden width ×4. Not included:
-  PrePostDANorm and the depth-varying FFN width. Without PrePostDANorm the 24-layer (L)
-  run diverged, so add it before using MUDDFormer in deep models.
+  the depth-varying FFN width. PrePostDANorm is available as `prepost_norm: true`, following the
+  reference JAX code: normalised sources, a_i = 0, streams = X_i + DA, and a post-RMSNorm (scale
+  init 1e-3) on the R stream only. The default (`false`) diverged in the 24-layer L run.
 * **LAuReL**: applied per sublayer. The RW weights are bounded as `(α, β) = 2·softmax(w)`
   (α = β = 1 at init). The paper asks for a bounding map but does not fix one. LR uses the
   paper's "column orthogonal" A init and B = 0. PA is not implemented.

@@ -4,3 +4,5 @@ variants:
   - {name: mhc-n4,        connection: mhc,        kwargs: {n: 4}}
   - {name: hc-dynamic-n4, connection: hc,         kwargs: {n: 4, dynamic: true}}
   - {name: muddformer,    connection: muddformer}
+  # plain MUDDFormer diverged at 24 layers; the paper's PrePostDANorm is meant for deep models
+  - {name: muddformer-ppn, connection: muddformer, kwargs: {prepost_norm: true}}
