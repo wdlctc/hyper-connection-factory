@@ -82,7 +82,7 @@ def main():
         + table + "\n")
     print(table)
 
-    cmap = plt.get_cmap("tab10")
+    cmap = plt.get_cmap("tab20")
     for kind in ("loss", "delta"):
         fig, ax = plt.subplots(figsize=(7, 4.5))
         for i, n in enumerate(names):
@@ -92,8 +92,10 @@ def main():
             if not pts:
                 continue
             xs, ys, es = zip(*pts)
-            ax.errorbar(xs, ys, yerr=es, marker="o", ms=4, lw=1.4, capsize=2,
-                        ls="--" if n == args.baseline else "-", color=cmap(i % 10), label=n)
+            single = len(xs) == 1  # a lone point needs a bigger marker to be visible
+            ax.errorbar(xs, ys, yerr=es, marker="D" if single else "o", ms=8 if single else 4,
+                        lw=1.4, capsize=2,
+                        ls="--" if n == args.baseline else "-", color=cmap(i % 20), label=n)
         ax.set_xscale("log")
         ax.set_xlabel("non-embedding parameters")
         ax.set_ylabel("final val loss" if kind == "loss" else f"Δ val loss vs {args.baseline}")
