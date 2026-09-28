@@ -1,0 +1,6 @@
+# Remaining variants at size L (8-GPU DDP each), fastest first; MHAR last (slow kernel, ~6h).
+variants:
+  - {name: frac-dynamic-m2, connection: frac,    kwargs: {m: 2, dynamic: true}}
+  - {name: hc-static-n4,    connection: hc,      kwargs: {n: 4, dynamic: false}}
+  - {name: attnres-full,    connection: attnres}
+  - {name: mhar-h4,         connection: mhar,    kwargs: {heads: 4}}

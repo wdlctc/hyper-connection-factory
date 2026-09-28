@@ -1,0 +1,3 @@
+# MUDDFormer + PrePostDANorm at size M, so the ppn curve has an M point next to L.
+variants:
+  - {name: muddformer-ppn, connection: muddformer, kwargs: {prepost_norm: true}}
