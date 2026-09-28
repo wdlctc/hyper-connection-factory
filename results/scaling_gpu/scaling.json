@@ -21,6 +21,16 @@
   },
   {
     "variant": "frac-dynamic-m2",
+    "width": "l",
+    "params": 303785536,
+    "val_loss": 2.8391313552856445,
+    "std": 0.0,
+    "seeds": 1,
+    "delta": -0.0014140605926513672,
+    "tok_per_s": 942736.8190120141
+  },
+  {
+    "variant": "frac-dynamic-m2",
     "width": "m",
     "params": 85018656,
     "val_loss": 3.1843395233154297,
@@ -168,6 +178,16 @@
     "seeds": 1,
     "delta": -0.0709531307220459,
     "tok_per_s": 649286.4757390721
+  },
+  {
+    "variant": "muddformer-ppn",
+    "width": "m",
+    "params": 85602177,
+    "val_loss": 3.134310007095337,
+    "std": 0.0,
+    "seeds": 1,
+    "delta": -0.06503756841023778,
+    "tok_per_s": 2198343.651519982
   },
   {
     "variant": "prenorm",
