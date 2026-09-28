@@ -54,10 +54,11 @@ Where there are several seeds the table gives mean ± std (pre-norm at M: 3 seed
 | mhar-h4 | -0.0426 | -0.0292 | — |
 | mhc-n4 | -0.0621 | -0.0495 ± 0.0029 (n=3) | -0.0396 |
 | muddformer | -0.1115 | -0.0698 ± 0.0011 (n=2) | — |
+| muddformer-ppn | — | — | -0.0710 |
 | *non-emb params* | 38.5M | 85.0M | 303.6M |
 
-At L only pre-norm, mHC and dynamic HC finished (1 seed each). MUDDFormer diverged at L,
-see below. The other variants were not run at L.
+At L, pre-norm, mHC, dynamic HC and MUDDFormer with PrePostDANorm (`muddformer-ppn`) finished,
+1 seed each. Plain MUDDFormer diverged at L (see below), and the other variants were not run at L.
 
 ![gain vs size](results/scaling_gpu/delta_vs_params.png)
 
@@ -71,10 +72,12 @@ What the GPU runs show:
   ~3× increase in size, so it is shrinking, but it has not vanished by 300M.
 * **Static mixing does not survive scale.** Static HC falls from −0.036 at S to −0.008 at M.
   AttnRes (−0.041 → −0.013) and Frac (−0.025 → −0.015) also shrink quickly.
-* **MUDDFormer is the best variant at S and M** (−0.112, then −0.070 ± 0.001) **but diverged at L**
-  (24 layers). Gradient spikes began around step 3000, the loss blew up near step 3300, and the
-  model collapsed to the initial loss by step 7000. The paper uses *PrePostDANorm* for deep
-  models. It is now implemented (`prepost_norm: true`), and the L rerun with it is pending.
+* **MUDDFormer is the best variant at every size, and its gain does not shrink from M to L.** It is
+  −0.112 at S, −0.070 ± 0.001 at M and −0.071 at L. At L it needs the paper's **PrePostDANorm**
+  (`prepost_norm: true`). Plain MUDDFormer diverged at 24 layers: gradient norms spiked up to 7×10⁴
+  from step ~3000 and the loss collapsed to the initial value by step 7000. With PrePostDANorm the
+  max grad norm up to step 7500 was 14, the same as pre-norm. Caveat: S/M used plain MUDDFormer
+  and L uses the PrePostDANorm variant, so the M → L comparison mixes two configurations.
 * **Depth attention.** MHAR beats single-head AttnRes at M (−0.029 vs −0.013, 1 seed each).
 * **Throughput** (relative to pre-norm): at L with 8-GPU DDP, mHC runs at 0.53× and dynamic HC
   at 0.51×. At S/M (8 jobs sharing a node) the range is 0.47× (HC/mHC) to 0.78× (Frac).

@@ -160,6 +160,16 @@
     "tok_per_s": 260181.90851408243
   },
   {
+    "variant": "muddformer-ppn",
+    "width": "l",
+    "params": 306067525,
+    "val_loss": 2.76959228515625,
+    "std": 0.0,
+    "seeds": 1,
+    "delta": -0.0709531307220459,
+    "tok_per_s": 649286.4757390721
+  },
+  {
     "variant": "prenorm",
     "width": "l",
     "params": 303612928,

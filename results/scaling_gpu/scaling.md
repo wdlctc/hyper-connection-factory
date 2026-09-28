@@ -10,4 +10,5 @@ Row `prenorm` = its val loss; other rows = Δ vs prenorm at the same width.
 | mhar-h4 | -0.0426 | -0.0292 | — |
 | mhc-n4 | -0.0621 | -0.0495 ± 0.0029 (n=3) | -0.0396 |
 | muddformer | -0.1115 | -0.0698 ± 0.0011 (n=2) | — |
+| muddformer-ppn | — | — | -0.0710 |
 | *non-emb params* | 38.5M | 85.0M | 303.6M |
