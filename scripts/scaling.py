@@ -82,9 +82,9 @@ def main():
         + table + "\n")
     print(table)
 
-    cmap = plt.get_cmap("tab20")
+    cmap = plt.get_cmap("tab10")
     for kind in ("loss", "delta"):
-        fig, ax = plt.subplots(figsize=(7, 4.5))
+        fig, ax = plt.subplots(figsize=(8.5, 4.5))
         for i, n in enumerate(names):
             pts = sorted((r["params"], r["val_loss"] if kind == "loss" else r["delta"], r["std"])
                          for r in rows if r["variant"] == n
@@ -95,7 +95,7 @@ def main():
             single = len(xs) == 1  # a lone point needs a bigger marker to be visible
             ax.errorbar(xs, ys, yerr=es, marker="D" if single else "o", ms=8 if single else 4,
                         lw=1.4, capsize=2,
-                        ls="--" if n == args.baseline else "-", color=cmap(i % 20), label=n)
+                        ls="--" if n == args.baseline else "-", color=cmap(i % 10), label=n)
         ax.set_xscale("log")
         ax.set_xlabel("non-embedding parameters")
         ax.set_ylabel("final val loss" if kind == "loss" else f"Δ val loss vs {args.baseline}")
@@ -103,7 +103,7 @@ def main():
             ax.axhline(0, color="gray", lw=0.8)
         ax.set_title("HC scaling: " + ("loss vs size" if kind == "loss" else "gain vs size"))
         ax.grid(alpha=0.3, which="both")
-        ax.legend(fontsize=8)
+        ax.legend(fontsize=8, loc="center left", bbox_to_anchor=(1.01, 0.5))  # keep data points uncovered
         fig.tight_layout()
         fig.savefig(os.path.join(args.out, f"{kind}_vs_params.png"), dpi=150)
         plt.close(fig)
