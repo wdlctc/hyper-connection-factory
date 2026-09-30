@@ -47,18 +47,18 @@ Where there are several seeds the table gives mean ± std (pre-norm at M: 3 seed
 | variant | s | m | l |
 |---|---|---|---|
 | prenorm | 3.4439 | 3.1993 ± 0.0021 | 2.8405 |
-| attnres-full | -0.0407 | -0.0130 | — |
-| frac-dynamic-m2 | -0.0245 | -0.0150 | — |
+| attnres-full | -0.0407 | -0.0130 | -0.0318 |
+| frac-dynamic-m2 | -0.0245 | -0.0150 | -0.0014 |
 | hc-dynamic-n4 | -0.0699 | -0.0457 ± 0.0042 (n=3) | -0.0360 |
-| hc-static-n4 | -0.0355 | -0.0075 | — |
-| mhar-h4 | -0.0426 | -0.0292 | — |
+| hc-static-n4 | -0.0355 | -0.0075 | -0.0319 |
+| mhar-h4 | -0.0426 | -0.0292 | -0.0378 |
 | mhc-n4 | -0.0621 | -0.0495 ± 0.0029 (n=3) | -0.0396 |
 | muddformer | -0.1115 | -0.0698 ± 0.0011 (n=2) | — |
-| muddformer-ppn | — | — | -0.0710 |
+| muddformer-ppn | — | -0.0650 | -0.0710 |
 | *non-emb params* | 38.5M | 85.0M | 303.6M |
 
-At L, pre-norm, mHC, dynamic HC and MUDDFormer with PrePostDANorm (`muddformer-ppn`) finished,
-1 seed each. Plain MUDDFormer diverged at L (see below), and the other variants were not run at L.
+At L every variant is a single seed. Plain MUDDFormer diverged at L, so the L entry for MUDDFormer is
+`muddformer-ppn` (with PrePostDANorm), which was also run at M for a like-for-like comparison.
 
 ![gain vs size](results/scaling_gpu/delta_vs_params.png)
 
@@ -67,24 +67,30 @@ Full per-size tables with throughput and memory: [`results/scaling_gpu_s`](resul
 
 What the GPU runs show:
 
-* **mHC and dynamic HC keep a real gain up to 300M**, shrinking slowly: mHC −0.062 → −0.050 → −0.040,
-  dynamic HC −0.070 → −0.046 → −0.036 from S to M to L. The gain drops by roughly 20–25% for each
-  ~3× increase in size, so it is shrinking, but it has not vanished by 300M.
-* **Static mixing does not survive scale.** Static HC falls from −0.036 at S to −0.008 at M.
-  AttnRes (−0.041 → −0.013) and Frac (−0.025 → −0.015) also shrink quickly.
-* **MUDDFormer is the best variant at every size, and its gain does not shrink from M to L.** It is
-  −0.112 at S, −0.070 ± 0.001 at M and −0.071 at L. At L it needs the paper's **PrePostDANorm**
-  (`prepost_norm: true`). Plain MUDDFormer diverged at 24 layers: gradient norms spiked up to 7×10⁴
-  from step ~3000 and the loss collapsed to the initial value by step 7000. With PrePostDANorm the
-  max grad norm up to step 7500 was 14, the same as pre-norm. Caveat: S/M used plain MUDDFormer
-  and L uses the PrePostDANorm variant, so the M → L comparison mixes two configurations.
-* **Depth attention.** MHAR beats single-head AttnRes at M (−0.029 vs −0.013, 1 seed each).
-* **Throughput** (relative to pre-norm): at L with 8-GPU DDP, mHC runs at 0.53× and dynamic HC
-  at 0.51×. At S/M (8 jobs sharing a node) the range is 0.47× (HC/mHC) to 0.78× (Frac).
-  MHAR's 0.23× is an **implementation** limit, not the method's: `torch.compile` fuses the
+* **Important confound: L is also deeper.** S and M have 12 layers and L has 24, so the step from
+  M to L doubles depth as well as width. Every method here routes information *across depth*,
+  so read the M → L column as "bigger **and** deeper", not as pure size scaling.
+* **Every variant beats pre-norm at every size**, except Frac at L (−0.001, i.e. no gain).
+* **MUDDFormer is the best variant at every size.** −0.112 at S and −0.070 ± 0.001 at M (plain),
+  then −0.065 at M and **−0.071 at L** with PrePostDANorm. The like-for-like ppn comparison M → L
+  is flat to slightly growing. Plain MUDDFormer **diverged at 24 layers**: gradient norms spiked
+  up to 7×10⁴ from step ~3000 and the loss collapsed to the initial value by step 7000.
+  PrePostDANorm (`prepost_norm: true`) fixes it, with a max grad norm of 14 up to step 7500,
+  the same as pre-norm.
+* **mHC and dynamic HC shrink smoothly but stay clearly positive**: mHC −0.062 → −0.050 → −0.040,
+  dynamic HC −0.070 → −0.046 → −0.036.
+* **Static HC, AttnRes and MHAR dip at M and recover at L**: static HC −0.036 → −0.008 → −0.032,
+  AttnRes −0.041 → −0.013 → −0.032, MHAR −0.043 → −0.029 → −0.038. The recovery coincides with
+  the jump to 24 layers. It is consistent with depth-routing methods paying off more in deeper
+  nets, but 1 seed at L and the size/depth confound mean this is a hypothesis, not a result.
+  A 24-layer model at M width, or a 12-layer model at L width, would separate the two effects.
+* **MHAR beats single-head AttnRes at M and L** (−0.029 vs −0.013, then −0.038 vs −0.032).
+* **Throughput at L** (8×H100 DDP each, relative to pre-norm at 1.23M tok/s): Frac 0.76×,
+  static HC 0.63×, mHC 0.53×, MUDD-ppn 0.53×, dynamic HC 0.51×, AttnRes 0.38×, MHAR 0.24×.
+  MHAR's cost is an **implementation** limit, not the method's: `torch.compile` fuses the
   multi-head RMSNorm backward and the softmax into one slow kernel. Contributions welcome.
 * **Small scale misleads.** mHC was *worse* than pre-norm in the laptop runs below and static HC
-  beat dynamic HC there. Both reverse on GPU.
+  beat dynamic HC there. Neither holds on GPU.
 
 ### Laptop scale (sanity check only)
 

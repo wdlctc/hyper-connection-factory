@@ -1,6 +1,16 @@
 [
   {
     "variant": "attnres-full",
+    "width": "l",
+    "params": 303713280,
+    "val_loss": 2.808729648590088,
+    "std": 0.0,
+    "seeds": 1,
+    "delta": -0.03181576728820801,
+    "tok_per_s": 475221.05952386226
+  },
+  {
+    "variant": "attnres-full",
     "width": "m",
     "params": 84992256,
     "val_loss": 3.186377763748169,
@@ -81,6 +91,16 @@
   },
   {
     "variant": "hc-static-n4",
+    "width": "l",
+    "params": 303614080,
+    "val_loss": 2.808600425720215,
+    "std": 0.0,
+    "seeds": 1,
+    "delta": -0.031944990158081055,
+    "tok_per_s": 774286.8112742392
+  },
+  {
+    "variant": "hc-static-n4",
     "width": "m",
     "params": 84954432,
     "val_loss": 3.1918721199035645,
@@ -98,6 +118,16 @@
     "seeds": 1,
     "delta": -0.03545379638671875,
     "tok_per_s": 399985.00620781566
+  },
+  {
+    "variant": "mhar-h4",
+    "width": "l",
+    "params": 303713280,
+    "val_loss": 2.8027708530426025,
+    "std": 0.0,
+    "seeds": 1,
+    "delta": -0.03777456283569336,
+    "tok_per_s": 292146.74798598245
   },
   {
     "variant": "mhar-h4",
