@@ -41,6 +41,20 @@ variants: `configs/variants_gpu.yaml`.
 | M | 12L × 768 | 85.0M | 1.70B |
 | L | 24L × 1024 | 303.6M | 6.03B (8-GPU DDP per variant) |
 
+**Tokens per parameter (TPP).** Every GPU size is trained at about 20 tokens per *non-embedding*
+parameter, roughly Chinchilla-optimal. Input and output embeddings are tied, so counting the
+embedding table once lowers the ratio, most at small sizes:
+
+| size | non-emb params | incl. embedding | training tokens | TPP (non-emb) | TPP (incl. emb) |
+|---|---|---|---|---|---|
+| S | 38.5M | 64.3M | 0.79B | 20.4 | 12.2 |
+| M | 85.0M | 123.6M | 1.70B | 20.1 | 13.8 |
+| L | 303.6M | 355.1M | 6.03B | 19.9 | 17.0 |
+
+TPP is computed for the pre-norm model. Variants add up to ~2% parameters (mHC the most), so
+their TPP is marginally lower. The laptop runs below use a fixed 12.3M tokens, i.e. **0.6–4.8 TPP**,
+so they are heavily undertrained. This is the main reason they do not agree with the GPU results.
+
 Row `prenorm` shows its validation loss; the other rows show Δ vs pre-norm at the same size (negative = better).
 Where there are several seeds the table gives mean ± std (pre-norm at M: 3 seeds, std 0.002).
 
@@ -129,7 +143,7 @@ Throughput is measured on MPS.
 * Post-norm collapses to the unigram loss at lr ≥ 1e-3. At 3e-4 it trains but stays far behind
   pre-norm (5.91), and its LR has not been tuned further.
 
-**Width ladder on MPS** (12L, d = 128…384, a fixed 12.3M tokens, LR ∝ 1/d; `configs/scaling/`).
+**Width ladder on MPS** (12L, d = 128…384, a fixed 12.3M tokens = 4.8 → 0.6 TPP, LR ∝ 1/d; `configs/scaling/`).
 Pre-norm at d=384 is *worse* than at d=256 because the larger models are undertrained on this
 budget. That inflates every d=384 gain, so **do not read a scaling trend from this table**. The
 GPU ladder above, where tokens grow with size, is the one to trust.
