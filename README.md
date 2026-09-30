@@ -40,6 +40,7 @@ variants: `configs/variants_gpu.yaml`.
 | S | 12L × 512 | 38.5M | 0.79B |
 | M | 12L × 768 | 85.0M | 1.70B |
 | L | 24L × 1024 | 303.6M | 6.03B (8-GPU DDP per variant) |
+| XL | 24L × 2048 | 1.21B | 24.3B (8-GPU DDP per variant) — **running** |
 
 **Tokens per parameter (TPP).** Every GPU size is trained at about 20 tokens per *non-embedding*
 parameter, roughly Chinchilla-optimal. Input and output embeddings are tied, so counting the
@@ -50,6 +51,7 @@ embedding table once lowers the ratio, most at small sizes:
 | S | 38.5M | 64.3M | 0.79B | 20.4 | 12.2 |
 | M | 85.0M | 123.6M | 1.70B | 20.1 | 13.8 |
 | L | 303.6M | 355.1M | 6.03B | 19.9 | 17.0 |
+| XL | 1214M | 1317M | 24.3B | 20.0 | 18.4 |
 
 TPP is computed for the pre-norm model. Variants add up to ~2% parameters (mHC the most), so
 their TPP is marginally lower. The laptop runs below use a fixed 12.3M tokens, i.e. **0.6–4.8 TPP**,
