@@ -18,6 +18,7 @@ import os
 import time
 from dataclasses import asdict
 
+import numpy as np
 import torch
 import torch.distributed as dist
 import yaml
@@ -39,6 +40,9 @@ DEFAULTS = dict(
     eval_every=200, eval_batches=20, log_every=10,
     out_dir="runs", run_name=None, seed=0, compile=False, dtype="auto",
     wandb_project=None,
+    # checkpointing: every `ckpt_every` steps rank 0 writes <ckpt_dir>/<run_name>/latest.pt;
+    # a restarted run with the same run_name resumes from it automatically
+    ckpt_dir=None, ckpt_every=2000,
 )
 
 
@@ -165,6 +169,17 @@ def main(argv=None):
     tokens_per_step = cfg["batch_size"] * cfg["seq_len"] * cfg["grad_accum"] * world
 
     run_dir = os.path.join(cfg["out_dir"], cfg["run_name"])
+    ckpt_path = (os.path.join(cfg["ckpt_dir"], cfg["run_name"], "latest.pt")
+                 if cfg["ckpt_dir"] else None)
+    resume = torch.load(ckpt_path, map_location=device, weights_only=False) \
+        if ckpt_path and os.path.exists(ckpt_path) else None
+    if resume is not None:
+        model.load_state_dict(resume["model"])
+        opt.load_state_dict(resume["opt"])
+        # fresh, rank- and step-dependent sampling stream after a restart
+        train.rng = np.random.default_rng([cfg["seed"], rank, resume["step"]])
+        if master:
+            print(f"resumed {cfg['run_name']} from step {resume['step']}")
     log_f = None
     if master:
         os.makedirs(run_dir, exist_ok=True)
@@ -173,7 +188,7 @@ def main(argv=None):
                     tokens_per_step=tokens_per_step)
         with open(os.path.join(run_dir, "config.json"), "w") as f:
             json.dump(meta, f, indent=2)
-        log_f = open(os.path.join(run_dir, "log.jsonl"), "w")
+        log_f = open(os.path.join(run_dir, "log.jsonl"), "a" if resume else "w")
         print(f"[{cfg['run_name']}] params(non-emb)={n_params / 1e6:.2f}M "
               f"connection={n_conn / 1e3:.1f}K tokens/step={tokens_per_step} device={device}")
         if cfg["wandb_project"]:
@@ -210,8 +225,27 @@ def main(argv=None):
             torch.mps.synchronize()
 
     best_val, diverged = float("inf"), False
-    t_train, tok_seen = 0.0, 0
-    for step in range(cfg["max_steps"] + 1):
+    t_train, tok_seen, n_timed, step0 = 0.0, 0, 0, 0
+    if resume is not None:
+        step0, tok_seen, t_train, n_timed, best_val = (
+            resume["step"], resume["tok_seen"], resume["t_train"], resume["n_timed"],
+            resume["best_val"])
+        del resume
+
+    def save_ckpt(step):
+        if master:
+            os.makedirs(os.path.dirname(ckpt_path), exist_ok=True)
+            tmp = ckpt_path + ".tmp"
+            torch.save(dict(model=model.state_dict(), opt=opt.state_dict(), step=step,
+                            tok_seen=tok_seen, t_train=t_train, n_timed=n_timed,
+                            best_val=best_val), tmp)
+            os.replace(tmp, ckpt_path)  # atomic: never leave a half-written latest.pt
+        if ddp:
+            dist.barrier()
+
+    for step in range(step0, cfg["max_steps"] + 1):
+        if ckpt_path and step > step0 and step % cfg["ckpt_every"] == 0:
+            save_ckpt(step)
         if step % cfg["eval_every"] == 0 or step == cfg["max_steps"]:
             vl = evaluate()
             best_val = min(best_val, vl)
@@ -244,8 +278,9 @@ def main(argv=None):
         opt.zero_grad(set_to_none=True)
         sync()
         dt = time.perf_counter() - t0
-        if step > 5:  # skip compile / warmup steps in the throughput figure
+        if step > step0 + 5:  # skip compile / warmup steps in the throughput figure
             t_train += dt
+            n_timed += 1
         tok_seen += tokens_per_step
 
         if step % cfg["log_every"] == 0:
@@ -263,7 +298,7 @@ def main(argv=None):
                 break
 
     if master:
-        steps_timed = max(1, min(step, cfg["max_steps"]) - 6)
+        steps_timed = max(1, n_timed)
         summary = dict(
             run_name=cfg["run_name"], connection=cfg["connection"],
             connection_kwargs=cfg["connection_kwargs"], seed=cfg["seed"],
