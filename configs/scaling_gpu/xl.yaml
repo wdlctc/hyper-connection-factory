@@ -1,0 +1,20 @@
+# GPU scaling ladder, size XL: 24L x 2048 (1.21B non-emb), 20 tokens/param.
+# Same depth as L, so L -> XL changes width only (separates size from the 12 -> 24 layer jump).
+# DDP on 8 GPUs: 8 x 1024 x grad_accum 8 x 8 ranks = 524K tokens/step; 46,400 steps = 24.3B tokens.
+# Data: FineWeb-Edu sample-100BT (python -m hcfactory.prepare_data --dataset fineweb-edu-100bt ...).
+n_layer: 24
+n_head: 16
+d_model: 2048
+data_dir: /data02/cheng.luo/hcf/data/fineweb-edu-100bt
+seq_len: 1024
+batch_size: 8
+grad_accum: 8
+max_steps: 46400
+lr: 6.0e-4
+warmup_steps: 2000
+schedule: wsd
+cooldown_frac: 0.2
+eval_every: 2000
+eval_batches: 200
+compile: true
+out_dir: runs/scaling_gpu/xl
