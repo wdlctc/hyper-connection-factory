@@ -60,7 +60,9 @@ Where there are several seeds the table gives mean ± std (pre-norm at M: 3 seed
 At L every variant is a single seed. Plain MUDDFormer diverged at L, so the L entry for MUDDFormer is
 `muddformer-ppn` (with PrePostDANorm), which was also run at M for a like-for-like comparison.
 
-![gain vs size](results/scaling_gpu/delta_vs_params.png)
+![gain over pre-norm vs model size](results/scaling_gpu/gain_vs_size.png)
+
+![quality vs speed at L](results/scaling_gpu/tradeoff_L.png)
 
 Full per-size tables with throughput and memory: [`results/scaling_gpu_s`](results/scaling_gpu_s),
 [`results/scaling_gpu_m`](results/scaling_gpu_m).
@@ -205,6 +207,7 @@ python scripts/sweep.py --config configs/scaling_gpu/m.yaml --variants configs/v
 python scripts/sweep.py --config configs/scaling_gpu/l.yaml --variants configs/variants_l.yaml  --nproc 8
 python scripts/sweep.py --config configs/scaling_gpu/l.yaml --variants configs/variants_l2.yaml --nproc 8
 python scripts/scaling.py runs/scaling_gpu --out results/scaling_gpu
+python scripts/plot_scaling_gpu.py runs/scaling_gpu --out results/scaling_gpu   # README figures
 ```
 
 ```bash
