@@ -30,6 +30,8 @@ import numpy as np
 DATASETS = {
     # name: (hf path, hf config, split, text field)
     "fineweb-edu": ("HuggingFaceFW/fineweb-edu", "sample-10BT", "train", "text"),
+    # larger sample for >10B-token runs (e.g. 1B params at 20 tokens/param)
+    "fineweb-edu-100bt": ("HuggingFaceFW/fineweb-edu", "sample-100BT", "train", "text"),
     "tinystories": ("roneneldan/TinyStories", None, "train", "text"),
 }
 
@@ -63,6 +65,7 @@ def iter_rows_api(path, name, split, field, page=100, workers=2):
 
 PARQUET_PATTERNS = {
     "fineweb-edu": "sample/10BT/*.parquet",
+    "fineweb-edu-100bt": "sample/100BT/*.parquet",
     "tinystories": None,
 }
 
