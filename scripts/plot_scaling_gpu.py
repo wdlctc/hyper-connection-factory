@@ -19,6 +19,8 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.lines  # noqa: E402
+import matplotlib.ticker  # noqa: E402
+import matplotlib.transforms  # noqa: E402
 import matplotlib.pyplot as plt  # noqa: E402
 
 # Fixed categorical order (validated palette, light surface). A method keeps its
@@ -81,16 +83,21 @@ def main():
     base = {s: st.mean(r["final_val_loss"] for r in data[(s, "prenorm")]) for s, _ in SIZES
             if (s, "prenorm") in data}
     base_tps = {s: st.mean(r["tok_per_s"] for r in data[(s, "prenorm")]) for s in base}
-    xpos = {s: i for i, (s, _) in enumerate(SIZES)}
+    # x = real non-embedding parameter count of the pre-norm model at each size (log axis)
+    xpos = {s: data[(s, "prenorm")][0]["params_non_embedding"] for s, _ in SIZES}
+    x_lo, x_hi = xpos["s"] / 1.22, xpos["l"] * 1.22
 
     # ---- gain vs size -------------------------------------------------------
-    fig, ax = plt.subplots(figsize=(9.2, 6.0), facecolor=SURFACE)
+    fig, ax = plt.subplots(figsize=(11, 6.4), facecolor=SURFACE)
     style_axes(ax)
     ax.axhline(0, color=INK2, lw=1.2, ls=(0, (4, 3)))
-    ax.text(-0.08, 0.002, "pre-norm baseline", color=INK2, fontsize=8.5, va="bottom")
+    ax.set_xscale("log")
+    ax.text(x_lo * 1.03, 0.002, "pre-norm baseline", color=INK2, fontsize=8.5, va="bottom")
     # depth changes between M and L: mark it, since it confounds the M→L step
-    ax.axvspan(1.5, 2.25, color="#efeee9", zorder=0)
-    ax.text(1.875, 0.004, "depth 12 → 24 layers", color=INK2, fontsize=8.5, va="bottom", ha="center")
+    mid = (xpos["m"] * xpos["l"]) ** 0.5
+    ax.axvspan(mid, x_hi, color="#efeee9", zorder=0)
+    ax.text((mid * x_hi) ** 0.5, 0.004, "depth 12 → 24 layers", color=INK2, fontsize=8.5,
+            va="bottom", ha="center")
 
     ends, handles = [], []
     for keys, label, color, marker, ls in METHODS:
@@ -109,28 +116,30 @@ def main():
                     elinewidth=1.2, capsize=3, zorder=4)
         handles.append(matplotlib.lines.Line2D([], [], color=color, ls=ls, lw=2, marker=marker,
                                                ms=6, mec=color, label=label))
-        if xs[-1] == 2:
+        if xs[-1] == xpos["l"]:
             ends.append((ys[-1], label, color))
     # direct labels at the L end (values + names), spread to avoid collisions
     ly = spread([e[0] for e in ends], 0.0052)
+    trans = matplotlib.transforms.blended_transform_factory(ax.transAxes, ax.transData)
     for (y, label, color), y2 in zip(ends, ly):
-        ax.annotate(f"{y:+.3f}  {label}", xy=(2, y), xytext=(2.3, y2), textcoords="data",
-                    fontsize=8.5, color=INK, va="center",
-                    arrowprops=dict(arrowstyle="-", color=color, lw=1, shrinkA=0, shrinkB=5))
+        ax.annotate(f"{y:+.3f}  {label}", xy=(xpos["l"], y), xytext=(1.04, y2),
+                    textcoords=trans, fontsize=8.5, color=INK, va="center", annotation_clip=False,
+                    arrowprops=dict(arrowstyle="-", color=color, lw=1, shrinkA=2, shrinkB=5))
 
-    ax.set_xticks(range(len(SIZES)), [lab for _, lab in SIZES], color=INK)
-    ax.set_xlim(-0.15, 3.35)
+    ax.set_xlim(x_lo, x_hi)
+    ax.set_xticks([xpos[s] for s, _ in SIZES], [lab for _, lab in SIZES], color=INK)
+    ax.xaxis.set_minor_locator(matplotlib.ticker.NullLocator())
+    ax.set_xlabel("non-embedding parameters (log scale)", color=INK2, fontsize=9)
     ax.set_ylabel("Δ validation loss vs pre-norm  (lower is better)", color=INK, fontsize=10)
     ax.set_title("Gain over pre-norm at three model sizes (FineWeb-Edu, ~20 tokens/param)",
                  color=INK, fontsize=11.5, loc="left", pad=12)
     ax.set_ylim(-0.122, 0.012)
-    ax.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, -0.16), fontsize=8,
-              frameon=False, ncol=4, labelcolor=INK, handlelength=3.2)
-    ax.spines["bottom"].set_bounds(0, 2)
+    fig.legend(handles=handles, loc="lower center", bbox_to_anchor=(0.5, 0.035), fontsize=8,
+               frameon=False, ncol=4, labelcolor=INK, handlelength=3.2)
     fig.text(0.01, 0.01, "Error bars: std over seeds where >1 seed (M: pre-norm, mHC, HC dynamic ×3; "
              "MUDD ×2). L: 1 seed each. Plain MUDDFormer diverged at L.",
              fontsize=7.5, color=INK2)
-    fig.tight_layout(rect=(0, 0.03, 1, 1))
+    fig.tight_layout(rect=(0, 0.13, 0.8, 1))  # right margin: direct labels; bottom: legend
     fig.savefig(os.path.join(args.out, "gain_vs_size.png"), dpi=160, facecolor=SURFACE)
     plt.close(fig)
 
