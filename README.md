@@ -192,6 +192,20 @@ Any config key can be overridden from the CLI (`key=value`, nested `a.b=value`).
 | `configs/tiny.yaml` | 12L × 256d, 9.6M | 12.3M | laptop / 1 GPU, ~25 min per variant on MPS |
 | `configs/gpt124m.yaml` | 12L × 768d, GPT-2 small | 2.6B | 8 GPUs (DDP) |
 | `configs/gpt350m.yaml` | 24L × 1024d | 7.9B | 8 GPUs (DDP) |
+| `configs/scaling_gpu/s.yaml` | 12L × 512d, 38.5M | 0.79B | 1 H100 per variant, ~25–80 min |
+| `configs/scaling_gpu/m.yaml` | 12L × 768d, 85M | 1.70B | 1 H100 per variant, ~1–4.5 h |
+| `configs/scaling_gpu/l.yaml` | 24L × 1024d, 304M | 6.03B | 8 H100 (DDP) per variant, ~1.4–6 h |
+
+**Reproducing the GPU scaling results** (FineWeb-Edu, 8.0B training tokens prepared once):
+
+```bash
+python -m hcfactory.prepare_data --source parquet --train-tokens 8_000_000_000 --val-tokens 10_000_000 --workers 96
+python scripts/sweep.py --config configs/scaling_gpu/s.yaml --variants configs/variants_gpu.yaml --gpus 0,1,2,3,4,5,6,7
+python scripts/sweep.py --config configs/scaling_gpu/m.yaml --variants configs/variants_gpu.yaml --gpus 0,1,2,3,4,5,6,7
+python scripts/sweep.py --config configs/scaling_gpu/l.yaml --variants configs/variants_l.yaml  --nproc 8
+python scripts/sweep.py --config configs/scaling_gpu/l.yaml --variants configs/variants_l2.yaml --nproc 8
+python scripts/scaling.py runs/scaling_gpu --out results/scaling_gpu
+```
 
 ```bash
 # 8 GPUs, one variant per GPU in parallel (good for 124M)
@@ -273,8 +287,8 @@ hcfactory/
     depth_attention.py     attnres, mhar, dar
   train.py                 training template
   data.py, prepare_data.py data pipeline
-configs/                   tiny / gpt124m / gpt350m + the variant list
-scripts/                   sweep.py, compare.py, bench.py
+configs/                   tiny / gpt124m / gpt350m, scaling_gpu/{s,m,l}, variant lists
+scripts/                   sweep.py, compare.py, scaling.py, bench.py
 tests/                     correctness tests for every variant
 results/                   committed result tables and plots
 ```
