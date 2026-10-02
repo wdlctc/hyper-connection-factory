@@ -36,7 +36,8 @@ METHODS = [
     (("hc-static-n4",), "HC static (n=4)", "#008300", "P", "-"),
     (("frac-dynamic-m2",), "Frac (m=2)", "#4a3aa7", "X", "-"),
 ]
-SIZES = [("s", "S\n38.5M · 12 layers"), ("m", "M\n85M · 12 layers"), ("l", "L\n304M · 24 layers")]
+SIZES = [("s", "S\n38.5M\n12 layers"), ("m", "M\n85M\n12 layers"), ("l", "L\n304M\n24 layers"),
+         ("xl", "XL\n1.21B\n24 layers")]
 SURFACE, INK, INK2, GRID = "#fcfcfb", "#1f1f1e", "#5f5e5a", "#e6e5e0"
 
 
@@ -84,8 +85,10 @@ def main():
             if (s, "prenorm") in data}
     base_tps = {s: st.mean(r["tok_per_s"] for r in data[(s, "prenorm")]) for s in base}
     # x = real non-embedding parameter count of the pre-norm model at each size (log axis)
-    xpos = {s: data[(s, "prenorm")][0]["params_non_embedding"] for s, _ in SIZES}
-    x_lo, x_hi = xpos["s"] / 1.22, xpos["l"] * 1.22
+    SZ = [(s, lab) for s, lab in SIZES if (s, "prenorm") in data]  # sizes run so far
+    xpos = {s: data[(s, "prenorm")][0]["params_non_embedding"] for s, _ in SZ}
+    last = SZ[-1][0]
+    x_lo, x_hi = xpos["s"] / 1.22, xpos[last] * 1.22
 
     # ---- gain vs size -------------------------------------------------------
     fig, ax = plt.subplots(figsize=(11, 6.4), facecolor=SURFACE)
@@ -96,13 +99,13 @@ def main():
     # depth changes between M and L: mark it, since it confounds the M→L step
     mid = (xpos["m"] * xpos["l"]) ** 0.5
     ax.axvspan(mid, x_hi, color="#efeee9", zorder=0)
-    ax.text((mid * x_hi) ** 0.5, 0.004, "depth 12 → 24 layers", color=INK2, fontsize=8.5,
+    ax.text((mid * x_hi) ** 0.5, 0.004, "24 layers", color=INK2, fontsize=8.5,
             va="bottom", ha="center")
 
     ends, handles = [], []
     for keys, label, color, marker, ls in METHODS:
         pts = []
-        for s, _ in SIZES:
+        for s, _ in SZ:
             runs = sum((data.get((s, k), []) for k in keys), [])
             if not runs or s not in base:
                 continue
@@ -116,28 +119,29 @@ def main():
                     elinewidth=1.2, capsize=3, zorder=4)
         handles.append(matplotlib.lines.Line2D([], [], color=color, ls=ls, lw=2, marker=marker,
                                                ms=6, mec=color, label=label))
-        if xs[-1] == xpos["l"]:
-            ends.append((ys[-1], label, color))
+        if xs[-1] == xpos["l"] or xs[-1] == xpos[last]:
+            ends.append((ys[-1], label, color, xs[-1]))
     # direct labels at the L end (values + names), spread to avoid collisions
     ly = spread([e[0] for e in ends], 0.0052)
     trans = matplotlib.transforms.blended_transform_factory(ax.transAxes, ax.transData)
-    for (y, label, color), y2 in zip(ends, ly):
-        ax.annotate(f"{y:+.3f}  {label}", xy=(xpos["l"], y), xytext=(1.04, y2),
+    for (y, label, color, xe), y2 in zip(ends, ly):
+        tag = "" if xe == xpos[last] else f"  (at {[l for s, l in SZ if xpos[s] == xe][0].split(chr(10))[0]})"
+        ax.annotate(f"{y:+.3f}  {label}{tag}", xy=(xe, y), xytext=(1.04, y2),
                     textcoords=trans, fontsize=8.5, color=INK, va="center", annotation_clip=False,
                     arrowprops=dict(arrowstyle="-", color=color, lw=1, shrinkA=2, shrinkB=5))
 
     ax.set_xlim(x_lo, x_hi)
-    ax.set_xticks([xpos[s] for s, _ in SIZES], [lab for _, lab in SIZES], color=INK)
+    ax.set_xticks([xpos[s] for s, _ in SZ], [lab for _, lab in SZ], color=INK)
     ax.xaxis.set_minor_locator(matplotlib.ticker.NullLocator())
     ax.set_xlabel("non-embedding parameters (log scale)", color=INK2, fontsize=9)
     ax.set_ylabel("Δ validation loss vs pre-norm  (lower is better)", color=INK, fontsize=10)
-    ax.set_title("Gain over pre-norm at three model sizes (FineWeb-Edu, ~20 tokens/param)",
+    ax.set_title("Gain over pre-norm vs model size (FineWeb-Edu, ~20 tokens/param)",
                  color=INK, fontsize=11.5, loc="left", pad=12)
     ax.set_ylim(-0.122, 0.012)
     fig.legend(handles=handles, loc="lower center", bbox_to_anchor=(0.5, 0.035), fontsize=8,
                frameon=False, ncol=4, labelcolor=INK, handlelength=3.2)
     fig.text(0.01, 0.01, "Error bars: std over seeds where >1 seed (M: pre-norm, mHC, HC dynamic ×3; "
-             "MUDD ×2). L: 1 seed each. Plain MUDDFormer diverged at L.",
+             "MUDD ×2). L, XL: 1 seed each. Plain MUDDFormer diverged at L. XL in progress.",
              fontsize=7.5, color=INK2)
     fig.tight_layout(rect=(0, 0.13, 0.8, 1))  # right margin: direct labels; bottom: legend
     fig.savefig(os.path.join(args.out, "gain_vs_size.png"), dpi=160, facecolor=SURFACE)

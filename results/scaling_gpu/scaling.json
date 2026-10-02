@@ -220,6 +220,16 @@
     "tok_per_s": 2198343.651519982
   },
   {
+    "variant": "muddformer-ppn",
+    "width": "xl",
+    "params": 1219133509,
+    "val_loss": 2.414557695388794,
+    "std": 0.0,
+    "seeds": 1,
+    "delta": -0.06051492691040039,
+    "tok_per_s": 216296.63008545927
+  },
+  {
     "variant": "prenorm",
     "width": "l",
     "params": 303612928,
@@ -248,5 +258,15 @@
     "seeds": 1,
     "delta": 0.0,
     "tok_per_s": 699773.0094946893
+  },
+  {
+    "variant": "prenorm",
+    "width": "xl",
+    "params": 1214351360,
+    "val_loss": 2.4750726222991943,
+    "std": 0.0,
+    "seeds": 1,
+    "delta": 0.0,
+    "tok_per_s": 400737.64774618344
   }
 ]

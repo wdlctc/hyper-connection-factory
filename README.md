@@ -29,7 +29,7 @@ same function as the pre-norm baseline. This is checked by
 
 ## Results
 
-### GPU scaling (8×H100): HC family and friends from 38M to 300M
+### GPU scaling (8×H100): HC family and friends from 38M to 1.2B
 
 FineWeb-Edu, GPT-2 tokenizer, ~20 training tokens per non-embedding parameter, global batch 262K
 tokens, WSD schedule, bf16 + `torch.compile`, one variant per GPU. Configs: `configs/scaling_gpu/{s,m}.yaml`,
@@ -40,7 +40,7 @@ variants: `configs/variants_gpu.yaml`.
 | S | 12L × 512 | 38.5M | 0.79B |
 | M | 12L × 768 | 85.0M | 1.70B |
 | L | 24L × 1024 | 303.6M | 6.03B (8-GPU DDP per variant) |
-| XL | 24L × 2048 | 1.21B | 24.3B (8-GPU DDP per variant) — **running** |
+| XL | 24L × 2048 | 1.21B | 24.3B (8-GPU DDP per variant) — **in progress** (2/8 variants done) |
 
 **Tokens per parameter (TPP).** Every GPU size is trained at about 20 tokens per *non-embedding*
 parameter, roughly Chinchilla-optimal. Input and output embeddings are tied, so counting the
@@ -60,18 +60,18 @@ so they are heavily undertrained. This is the main reason they do not agree with
 Row `prenorm` shows its validation loss; the other rows show Δ vs pre-norm at the same size (negative = better).
 Where there are several seeds the table gives mean ± std (pre-norm at M: 3 seeds, std 0.002).
 
-| variant | s | m | l |
-|---|---|---|---|
-| prenorm | 3.4439 | 3.1993 ± 0.0021 | 2.8405 |
-| attnres-full | -0.0407 | -0.0130 | -0.0318 |
-| frac-dynamic-m2 | -0.0245 | -0.0150 | -0.0014 |
-| hc-dynamic-n4 | -0.0699 | -0.0457 ± 0.0042 (n=3) | -0.0360 |
-| hc-static-n4 | -0.0355 | -0.0075 | -0.0319 |
-| mhar-h4 | -0.0426 | -0.0292 | -0.0378 |
-| mhc-n4 | -0.0621 | -0.0495 ± 0.0029 (n=3) | -0.0396 |
-| muddformer | -0.1115 | -0.0698 ± 0.0011 (n=2) | — |
-| muddformer-ppn | — | -0.0650 | -0.0710 |
-| *non-emb params* | 38.5M | 85.0M | 303.6M |
+| variant | s | m | l | xl |
+|---|---|---|---|---|
+| prenorm | 3.4439 | 3.1993 ± 0.0021 | 2.8405 | 2.4751 |
+| attnres-full | -0.0407 | -0.0130 | -0.0318 | — |
+| frac-dynamic-m2 | -0.0245 | -0.0150 | -0.0014 | — |
+| hc-dynamic-n4 | -0.0699 | -0.0457 ± 0.0042 (n=3) | -0.0360 | — |
+| hc-static-n4 | -0.0355 | -0.0075 | -0.0319 | — |
+| mhar-h4 | -0.0426 | -0.0292 | -0.0378 | — |
+| mhc-n4 | -0.0621 | -0.0495 ± 0.0029 (n=3) | -0.0396 | — |
+| muddformer | -0.1115 | -0.0698 ± 0.0011 (n=2) | — | — |
+| muddformer-ppn | — | -0.0650 | -0.0710 | -0.0605 |
+| *non-emb params* | 38.5M | 85.0M | 303.6M | 1214.4M |
 
 At L every variant is a single seed. Plain MUDDFormer diverged at L, so the L entry for MUDDFormer is
 `muddformer-ppn` (with PrePostDANorm), which was also run at M for a like-for-like comparison.
@@ -89,6 +89,10 @@ What the GPU runs show:
   M to L doubles depth as well as width. Every method here routes information *across depth*,
   so read the M → L column as "bigger **and** deeper", not as pure size scaling.
 * **Every variant beats pre-norm at every size**, except Frac at L (−0.001, i.e. no gain).
+* **XL (1.21B, 24.3B tokens; in progress).** Same 24 layers as L, so L → XL is a pure width
+  step. MUDDFormer + PrePostDANorm finishes at **−0.061** (2.4146 vs 2.4751). The gap was
+  −0.068 to −0.066 through the constant-LR phase and narrowed during the WSD cooldown. The other
+  variants are still training.
 * **MUDDFormer is the best variant at every size.** −0.112 at S and −0.070 ± 0.001 at M (plain),
   then −0.065 at M and **−0.071 at L** with PrePostDANorm. The like-for-like ppn comparison M → L
   is flat to slightly growing. Plain MUDDFormer **diverged at 24 layers**: gradient norms spiked
