@@ -180,6 +180,16 @@
     "tok_per_s": 339412.2421239133
   },
   {
+    "variant": "mhc-n4",
+    "width": "xl",
+    "params": 1223822613,
+    "val_loss": 2.446333646774292,
+    "std": 0.0,
+    "seeds": 1,
+    "delta": -0.028738975524902344,
+    "tok_per_s": 256027.10585590207
+  },
+  {
     "variant": "muddformer",
     "width": "m",
     "params": 85582977,

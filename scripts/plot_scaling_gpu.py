@@ -141,7 +141,7 @@ def main():
     fig.legend(handles=handles, loc="lower center", bbox_to_anchor=(0.5, 0.035), fontsize=8,
                frameon=False, ncol=4, labelcolor=INK, handlelength=3.2)
     fig.text(0.01, 0.01, "Error bars: std over seeds where >1 seed (M: pre-norm, mHC, HC dynamic ×3; "
-             "MUDD ×2). L, XL: 1 seed each. Plain MUDDFormer diverged at L. XL in progress.",
+             "MUDD ×2). L, XL: 1 seed each. Plain MUDDFormer diverged at L. XL: 3 of 8 variants completed.",
              fontsize=7.5, color=INK2)
     fig.tight_layout(rect=(0, 0.13, 0.8, 1))  # right margin: direct labels; bottom: legend
     fig.savefig(os.path.join(args.out, "gain_vs_size.png"), dpi=160, facecolor=SURFACE)
